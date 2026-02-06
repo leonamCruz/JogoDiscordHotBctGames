@@ -13,7 +13,6 @@ import top.leonam.hotbctgamess.repository.AccountRepository;
 import top.leonam.hotbctgamess.repository.TransactionRepository;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
@@ -76,7 +75,7 @@ public class TransactionService {
     }
     @Transactional
     public String getExtract(Long id) {
-        Set<Transaction> transactions = transactionRepository.findTop5ByOriginAccount_Player_Identity_DiscordIdOrderByCreatedAtDesc(id)
+        Set<Transaction> transactions = transactionRepository.findTop9ByOriginAccount_Player_Identity_DiscordIdOrderByCreatedAtDesc(id)
                 .orElseThrow(() -> new RuntimeException("Transações não encontradas"));
 
         if (transactions.isEmpty()) return "Você não realizou nenhuma transação neste período.";
@@ -86,22 +85,6 @@ public class TransactionService {
         return sb.toString();
     }
 
-    @Transactional
-    public String getExtract(Long id, LocalDateTime dateTime) {
-        LocalDateTime start = dateTime.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
-        LocalDateTime end = start.plusMonths(1);
-
-        Set<Transaction> transactions = transactionRepository
-                .findByOriginAccount_Player_Identity_DiscordIdAndCreatedAtBetweenOrderByCreatedAtDesc(id, start, end)
-                .orElseThrow(() -> new RuntimeException("Nenhuma transação no período"));
-
-        if (transactions.isEmpty()) return "Você não realizou nenhuma transação neste período.";
-
-        StringBuilder sb = generateExtract(String.format("📑 **EXTRATO MENSAL (%02d/%d)**\n\n",
-                dateTime.getMonthValue(), dateTime.getYear()), transactions);
-
-        return sb.toString();
-    }
     @Transactional
     public StringBuilder generateExtract(String title, Set<Transaction> transactions) {
         StringBuilder sb = new StringBuilder();
