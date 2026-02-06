@@ -31,11 +31,7 @@ public class JdaListener extends ListenerAdapter {
 
         if (command != null) {
             log.info("Comando executado: {}", command.name());
-            log.info("{} {}", event.getMember().getNickname(), event.getMessageId());
-            log.info("Do Server: {}", event.getGuild().getName());
-            log.info("Do Canal: {}", event.getChannel().getName());
-            log.info("USERS: {}", event.getMessage().getMentions().getUsers());
-            log.info("MEMBERS: {}", event.getMessage().getMentions().getMembers());
+
             service.registerIfAbsent(event);
 
             String message = command.execute(event);
