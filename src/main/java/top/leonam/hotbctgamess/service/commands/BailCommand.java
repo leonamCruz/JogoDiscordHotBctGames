@@ -3,6 +3,7 @@ package top.leonam.hotbctgamess.service.commands;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import org.springframework.stereotype.Service;
 import top.leonam.hotbctgamess.interfaces.Command;
@@ -20,7 +21,7 @@ public class BailCommand implements Command {
 
     @Override
     @Transactional
-    public String execute(MessageReceivedEvent event) {
+    public EmbedBuilder execute(MessageReceivedEvent event) {
         return prisonService.payBail(event);
     }
 }

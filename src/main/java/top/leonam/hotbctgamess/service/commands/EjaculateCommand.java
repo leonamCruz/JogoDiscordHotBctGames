@@ -3,6 +3,7 @@ package top.leonam.hotbctgamess.service.commands;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import org.springframework.stereotype.Service;
 import top.leonam.hotbctgamess.interfaces.Command;
@@ -11,13 +12,15 @@ import top.leonam.hotbctgamess.service.EjaculateService;
 import top.leonam.hotbctgamess.service.PlayerService;
 import top.leonam.hotbctgamess.service.PrisonService;
 
+import java.awt.Color;
+
 @Service
 @Slf4j
 @AllArgsConstructor
 public class EjaculateCommand implements Command {
-    private PlayerService playerService;
-    private PrisonService prisonService;
-    private EjaculateService ejaculateService;
+    private final PlayerService playerService;
+    private final PrisonService prisonService;
+    private final EjaculateService ejaculateService;
 
     @Override
     public String name() {
@@ -26,24 +29,51 @@ public class EjaculateCommand implements Command {
 
     @Transactional
     @Override
-    public String execute(MessageReceivedEvent event) {
+    public EmbedBuilder execute(MessageReceivedEvent event) {
+        EmbedBuilder embed = new EmbedBuilder();
         Long idFirst = event.getAuthor().getIdLong();
 
         var player = playerService.getPlayer(idFirst);
-
         prisonService.checkAndRelease(player);
 
-        if (player.getPrison().getStatus() == PrisonStatus.PRESO) return "🔒 Você ainda está preso. Aguarde o tempo acabar ou pague a fiança.";
+        if (player.getPrison().getStatus() == PrisonStatus.PRESO) {
+            embed.setColor(Color.RED);
+            embed.setTitle("🔒 Bloqueado");
+            embed.setDescription("Você está preso. Não dá pra fazer isso de dentro da cela (pelo menos não com os outros).");
+            return embed;
+        }
 
         var listUsers = event.getMessage().getMentions().getUsers();
 
-        if (listUsers.isEmpty()) return "❌ Você precisa marcar alguém para gozar.";
-        if (listUsers.size() > 1) return "⚠️ Calma lá. Só dá pra gozar em **uma pessoa por vez**.";
-        if (listUsers.getFirst().isBot()) return "🤖 Gozar no bot não vale. Eles não tem orgasmo e ficam meladinhos.";
+        if (listUsers.isEmpty()) {
+            embed.setColor(Color.ORANGE);
+            embed.setTitle("❓ Quem é o alvo?");
+            embed.setDescription("Você precisa marcar alguém para realizar o ato.");
+            return embed;
+        }
+
+        if (listUsers.size() > 1) {
+            embed.setColor(Color.YELLOW);
+            embed.setTitle("⚠️ Calma lá, garanhão");
+            embed.setDescription("Só dá para gozar em **uma pessoa por vez**. Foco no objetivo.");
+            return embed;
+        }
+
+        if (listUsers.getFirst().isBot()) {
+            embed.setColor(new Color(155, 89, 182));
+            embed.setTitle("🤖 Erro de Hardware");
+            embed.setDescription("Gozar no bot não vale. Eles não têm sentimentos e os circuitos ficam em curto.");
+            return embed;
+        }
 
         Long idLast = listUsers.getFirst().getIdLong();
 
-        if (idFirst.equals(idLast)) return "🪞 Gozar em si mesmo é um ato profano. Conta como terapia.";
+        if (idFirst.equals(idLast)) {
+            embed.setColor(Color.PINK);
+            embed.setTitle("🪞 Autoconhecimento");
+            embed.setDescription("Gozar em si mesmo é um ato profano. Conta como terapia, não como crime/ação.");
+            return embed;
+        }
 
         playerService.registerIfAbsent(idLast, listUsers.getFirst().getName());
 

@@ -3,6 +3,7 @@ package top.leonam.hotbctgamess.service;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import org.springframework.stereotype.Service;
 import top.leonam.hotbctgamess.model.entity.*;
@@ -10,6 +11,7 @@ import top.leonam.hotbctgamess.model.enums.PrisonStatus;
 import top.leonam.hotbctgamess.model.enums.TypeTransaction;
 import top.leonam.hotbctgamess.repository.PrisonRepository;
 
+import java.awt.Color; // Importante para as cores
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
@@ -36,7 +38,8 @@ public class PrisonService {
     }
 
     @Transactional
-    public String payBail(MessageReceivedEvent event) {
+    public EmbedBuilder payBail(MessageReceivedEvent event) {
+        EmbedBuilder embed = new EmbedBuilder();
 
         Long idDiscord = event.getAuthor().getIdLong();
         Long stateId = event.getJDA().getSelfUser().getIdLong();
@@ -44,14 +47,22 @@ public class PrisonService {
         Prison prison = getPrisonByDiscordId(idDiscord);
 
         if (prison.getStatus() == PrisonStatus.SOLTO) {
-            return "🟢 Você já está solto. O Estado agradece a tentativa de doação.";
+            embed.setColor(Color.GREEN);
+            embed.setTitle("🟢 Você já está solto");
+            embed.setDescription("O Estado agradece a tentativa de doação, mas você é um cidadão livre.");
+            return embed;
         }
 
         CrimeHistory lastCrime = crimeHistoryService.getLastCrime(idDiscord);
-        if (lastCrime == null) return "❓ Nenhum crime registrado. Algo aqui cheira a bug.";
+
+        if (lastCrime == null) {
+            embed.setColor(Color.ORANGE);
+            embed.setTitle("❓ Erro de Registro");
+            embed.setDescription("Nenhum crime registrado. Algo aqui cheira a bug na matrix.");
+            return embed;
+        }
 
         Player player = lastCrime.getPlayer();
-
         BigDecimal bailValue = calculateBail(lastCrime.getCrime(), player);
 
         Account accountFrom = accountService.getAccountByDiscordId(idDiscord);
@@ -65,17 +76,15 @@ public class PrisonService {
         );
 
         if (!paid) {
-            return String.format(
-                    """
-                    🚫 Fiança recusada.
-                    
-                    💰 Valor exigido: **R$ %.2f**
-                    📉 Saldo insuficiente.
-                    
-                    Continue refletindo atrás das grades.
-                    """,
-                    bailValue.doubleValue()
-            );
+            embed.setColor(Color.RED);
+            embed.setTitle("🚫 Fiança Recusada");
+            embed.setDescription("Seu saldo é insuficiente para comprar sua liberdade.");
+
+            embed.addField("💰 Valor Exigido", String.format("R$ %.2f", bailValue), true);
+            embed.addField("📉 Motivo", "Saldo Insuficiente", true);
+
+            embed.setFooter("Continue refletindo atrás das grades.", event.getAuthor().getEffectiveAvatarUrl());
+            return embed;
         }
 
         playerService.addXp(
@@ -89,19 +98,17 @@ public class PrisonService {
 
         prisonRepository.save(prison);
 
-        return String.format(
-                """
-                🏛️ Fiança paga com sucesso.
-                
-                💸 Valor pago: **R$ %.2f**
-                📉 XP penalizado: **-%d**
-                
-                🔓 Você está livre.
-                Tente não voltar tão cedo.
-                """,
-                bailValue.doubleValue(),
-                lastCrime.getCrime().getXp()
-        );
+        embed.setTitle("🏛️ Fiança Paga com Sucesso");
+        embed.setDescription("A justiça foi... estimulada financeiramente. Você está livre.");
+
+        embed.addField("💸 Valor Pago", String.format("R$ %.2f", bailValue), true);
+        embed.addField("📉 XP Perdido", String.format("-%d XP", lastCrime.getCrime().getXp()), true);
+        embed.addField("🔓 Novo Status", "Livre", false); // false para ocupar a linha inteira se quiser
+
+        embed.setThumbnail(event.getAuthor().getEffectiveAvatarUrl());
+        embed.setFooter("Tente não voltar tão cedo.");
+
+        return embed;
     }
 
     @Transactional
