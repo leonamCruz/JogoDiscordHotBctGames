@@ -8,6 +8,7 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import org.springframework.stereotype.Service;
 import top.leonam.hotbctgamess.interfaces.Command;
 import top.leonam.hotbctgamess.model.enums.PrisonStatus;
+import top.leonam.hotbctgamess.service.EggService;
 import top.leonam.hotbctgamess.service.EjaculateService;
 import top.leonam.hotbctgamess.service.PlayerService;
 import top.leonam.hotbctgamess.service.PrisonService;
@@ -18,9 +19,10 @@ import java.awt.Color;
 @Slf4j
 @AllArgsConstructor
 public class EjaculateCommand implements Command {
-    private final PlayerService playerService;
-    private final PrisonService prisonService;
-    private final EjaculateService ejaculateService;
+    private PlayerService playerService;
+    private PrisonService prisonService;
+    private EjaculateService ejaculateService;
+    private EggService eggService;
 
     @Override
     public String name() {
@@ -77,9 +79,19 @@ public class EjaculateCommand implements Command {
 
         playerService.registerIfAbsent(idLast, listUsers.getFirst().getName());
 
-        var playerOne = playerService.getPlayer(idFirst);
+        Integer quantity = eggService.getAmmountOfEjaculateRemaining(player);
+        log.info(quantity.toString());
+        if(quantity <= 0){
+            embed.setColor(Color.ORANGE);
+            embed.setTitle("🔒 Bloqueado");
+            embed.setThumbnail("https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExN3VvMjh2bmZ3NHViYjBqNWh1ZnR4b3M5eXNqb29ob3I4MHhnbGszeSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/S9FtQO5fxOMsT5l1wa/giphy.gif");
+            embed.setDescription("Você não pode mais gozar hoje. Está com o saco inflamado, goze amanhã \uD83D\uDE00");
+
+            return embed;
+        }
+
         var playerTwo = playerService.getPlayer(idLast);
 
-        return ejaculateService.ejaculateIn(playerOne, playerTwo, event);
+        return ejaculateService.ejaculateIn(player, playerTwo, event);
     }
 }

@@ -9,7 +9,7 @@ import top.leonam.hotbctgamess.model.enums.Rarity;
 
 import java.math.BigDecimal;
 
-@Entity(name = "product")
+@Entity
 @Table(name = "product")
 @Builder
 @AllArgsConstructor

@@ -2,9 +2,8 @@ package top.leonam.hotbctgamess.model.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import java.util.Set;
 
-@Entity(name = "achievement")
+@Entity
 @Table(name = "achievement")
 @Getter
 @Setter

@@ -6,7 +6,7 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-@Entity(name = "crime_history")
+@Entity
 @Table(name = "crime_history")
 @Builder
 @AllArgsConstructor

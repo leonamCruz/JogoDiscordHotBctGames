@@ -7,7 +7,7 @@ import top.leonam.hotbctgamess.model.enums.BankStatus;
 import java.math.BigDecimal;
 import java.util.Set;
 
-@Entity(name = "account_bank")
+@Entity
 @Table(name = "account_bank")
 @AllArgsConstructor
 @NoArgsConstructor

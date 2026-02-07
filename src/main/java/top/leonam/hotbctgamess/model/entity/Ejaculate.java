@@ -2,11 +2,10 @@ package top.leonam.hotbctgamess.model.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import top.leonam.hotbctgamess.model.enums.EjaculateStatus;
 
 import java.time.LocalDateTime;
-@Entity(name = "ejaculate")
+@Entity
 @Table(
         name = "ejaculate",
         indexes = {

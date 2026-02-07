@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
 
-@Entity(name = "inventory")
+@Entity
 @Table(name = "inventory")
 @Getter
 @Setter

@@ -6,7 +6,7 @@ import top.leonam.hotbctgamess.model.enums.PrisonStatus;
 
 import java.time.LocalDateTime;
 
-@Entity(name = "prison")
+@Entity
 @Table(name = "prison")
 @Builder
 @AllArgsConstructor
@@ -35,5 +35,10 @@ public class Prison {
 
     @Column(name = "release_at")
     private LocalDateTime releaseAt;
+
+    @PrePersist
+    public void prePersist() {
+        status = PrisonStatus.SOLTO;
+    }
 
 }

@@ -7,10 +7,7 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import org.springframework.stereotype.Service;
 import top.leonam.hotbctgamess.exceptions.UserNotFound;
-import top.leonam.hotbctgamess.model.entity.Account;
-import top.leonam.hotbctgamess.model.entity.Identity;
-import top.leonam.hotbctgamess.model.entity.Player;
-import top.leonam.hotbctgamess.model.entity.Prison;
+import top.leonam.hotbctgamess.model.entity.*;
 import top.leonam.hotbctgamess.model.enums.PrisonStatus;
 import top.leonam.hotbctgamess.repository.PlayerRepository;
 
@@ -57,18 +54,25 @@ public class PlayerService {
                             .respectPoints(1_000_000)
                             .build();
 
+                    Egg egg = Egg.builder()
+                            .remainingQuantity(3)
+                            .inflamed(false)
+                            .player(newPlayer)
+                            .build();
+
                     Account account = Account.builder()
                             .player(newPlayer)
                             .build();
 
                     Prison prison = Prison.builder()
                             .player(newPlayer)
-                            .status(PrisonStatus.SOLTO)
                             .build();
 
+                    newPlayer.setEgg(egg);
                     newPlayer.setAccount(account);
                     newPlayer.setPrison(prison);
-                    return playerRepository.save(newPlayer);
+
+                    return playerRepository.saveAndFlush(newPlayer);
                 });
     }
     private void savePlayer(long id, String name) {
@@ -87,18 +91,26 @@ public class PlayerService {
                             .respectPoints(0)
                             .build();
 
+                    Egg egg = Egg.builder()
+                            .remainingQuantity(3)
+                            .inflamed(false)
+                            .player(newPlayer)
+                            .build();
+
+                    newPlayer.setEgg(egg);
+
                     Account account = Account.builder()
                             .player(newPlayer)
                             .build();
 
                     Prison prison = Prison.builder()
                             .player(newPlayer)
-                            .status(PrisonStatus.SOLTO)
                             .build();
 
                     newPlayer.setAccount(account);
                     newPlayer.setPrison(prison);
-                    return playerRepository.save(newPlayer);
+
+                    return playerRepository.saveAndFlush(newPlayer);
                 });
     }
 
@@ -106,6 +118,7 @@ public class PlayerService {
         savePlayer(id, name);
     }
 
+    @Transactional
     public Player getPlayer(Long idDiscord){
         return playerRepository.findByIdentity_DiscordId(idDiscord).orElseThrow(()-> new UserNotFound("Este usuário não foi encontrado"));
     }

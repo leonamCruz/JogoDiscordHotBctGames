@@ -21,8 +21,9 @@ import java.util.Set;
 @Slf4j
 @AllArgsConstructor
 public class EjaculateService {
-    private final EjaculateRepository ejaculateRepository;
-    private final DiscordService discordService;
+    private EjaculateRepository ejaculateRepository;
+    private DiscordService discordService;
+    private EggService eggService;
 
     @Transactional
     public EmbedBuilder ejaculateIn(Player playerOne, Player playerTwo, MessageReceivedEvent event) {
@@ -44,6 +45,8 @@ public class EjaculateService {
         EmbedBuilder embed = getEmbedBuilder(playerOne, playerTwo, minutes);
 
         embed.setFooter("Aguarde a conclusão do ato...", event.getAuthor().getEffectiveAvatarUrl());
+
+        eggService.minusEjaculate(playerOne);
 
         return embed;
     }

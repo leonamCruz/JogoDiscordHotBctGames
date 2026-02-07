@@ -5,7 +5,7 @@ import lombok.*;
 
 import java.util.Set;
 
-@Entity(name = "player")
+@Entity
 @Table(name = "player")
 @Setter
 @Getter
@@ -34,9 +34,6 @@ public class Player {
     @Column(name = "respect_points", nullable = false)
     private Integer respectPoints;
 
-    @OneToOne(mappedBy = "player", cascade = CascadeType.ALL)
-    private Account account;
-
     @ManyToMany
     @JoinTable(
             name = "player_achievements",
@@ -53,6 +50,12 @@ public class Player {
 
     @OneToOne(mappedBy = "player", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Prison prison;
+
+    @OneToOne(mappedBy = "player", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Account account;
+
+    @OneToOne(mappedBy = "player", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Egg egg;
 
     @OneToMany(mappedBy = "player", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<PrisonHistory> prisonHistories;

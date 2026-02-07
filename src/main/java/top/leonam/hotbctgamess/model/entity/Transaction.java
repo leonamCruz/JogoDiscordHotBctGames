@@ -6,10 +6,9 @@ import top.leonam.hotbctgamess.model.enums.TransactionStatus;
 import top.leonam.hotbctgamess.model.enums.TypeTransaction;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDateTime;
 
-@Entity(name = "transaction_bank")
+@Entity
 @Table(name = "transaction_bank")
 @AllArgsConstructor
 @NoArgsConstructor
