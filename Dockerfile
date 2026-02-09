@@ -1,4 +1,4 @@
-FROM maven:3.9.12-eclipse-temurin-21-alpine AS build
+FROM maven:4.0.0-rc-4-eclipse-temurin-21-alpine AS build
 WORKDIR /app
 
 COPY pom.xml .
@@ -14,4 +14,4 @@ COPY --from=build /app/target/*.jar app.jar
 
 USER nobody
 
-ENTRYPOINT ["java", "-XX:MaxRAM0Percentage=85.0", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-XX:MaxRAM0Percentage=90.0", "-jar", "app.jar"]
