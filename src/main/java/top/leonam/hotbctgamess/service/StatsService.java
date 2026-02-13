@@ -36,8 +36,6 @@ public class StatsService {
                 .atStartOfDay(ZoneId.systemDefault())
                 .toInstant();
 
-        DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("dd-MM-yyyy");
-
         BigInteger totalMessages = safe(messageRepository.countByTimestampBetween(start, end));
         BigInteger totalUsersActive = safe(messageRepository.countDistinctUsers(start, end));
         BigInteger totalCharacters = safe(messageRepository.sumCharacters(start, end));
@@ -77,15 +75,24 @@ public class StatsService {
     @Cacheable(value = "dailyStats", key = "#date")
     public EmbedBuilder getDailyStatsEmbed(LocalDate date) {
         log.info("getDailyStatsEmbed date:{}", date);
+        var embed = new EmbedBuilder();
 
         var stats = getDailyStats(date);
 
         if (stats == null) {
-            generateDailyStats(date);
-            stats = getDailyStats(date);
+            embed.setTitle("Status da Mineração");
+
+            embed.setTimestamp(Instant.now());
+            embed.setColor(Color.RED);
+            embed.setThumbnail("https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExcnU2ZWtzemRsZmRzYzY4NDRkaWRhdGZ6d3prOTBheXg1dWVnNW5iMyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/QbBz1DPfH5ivzFFwt2/giphy.gif");
+            embed.setAuthor("HotBct Games");
+            embed.setDescription("Calma Moreno, a vida não é um morango. Amanhã você volta para ter dados.");
+
+            embed.setFooter("Aprendi com o Sávio Gameplay's");
+
+            return embed;
         }
 
-        var embed = new EmbedBuilder();
         embed.setTitle("Status da Mineração");
         embed.setTimestamp(Instant.now());
         embed.setColor(Color.GREEN);

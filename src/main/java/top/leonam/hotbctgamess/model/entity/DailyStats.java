@@ -7,7 +7,7 @@ import java.math.BigInteger;
 import java.time.LocalDate;
 
 @Entity
-@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"date"}))
+@Table
 @Data
 public class DailyStats {
 
@@ -15,7 +15,7 @@ public class DailyStats {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private LocalDate date;
 
     private BigInteger totalMessages;
