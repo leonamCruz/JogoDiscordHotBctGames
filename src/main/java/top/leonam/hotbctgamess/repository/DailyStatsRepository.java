@@ -6,5 +6,5 @@ import top.leonam.hotbctgamess.model.entity.DailyStats;
 import java.time.LocalDate;
 
 public interface DailyStatsRepository extends JpaRepository<DailyStats,Long> {
-    DailyStats getByDate(LocalDate date);
+    DailyStats getFirstByDateOrderByIdDesc(LocalDate date);
 }

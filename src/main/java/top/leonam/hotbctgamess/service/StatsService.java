@@ -31,10 +31,8 @@ public class StatsService {
     @Transactional
     public void generateDailyStats(LocalDate date) {
 
-        Instant start = date.atStartOfDay(ZoneId.systemDefault()).toInstant();
-        Instant end = date.plusDays(1)
-                .atStartOfDay(ZoneId.systemDefault())
-                .toInstant();
+        Instant start = date.atStartOfDay(ZoneId.of("America/Sao_Paulo")).toInstant();
+        Instant end = date.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
 
         BigInteger totalMessages = safe(messageRepository.countByTimestampBetween(start, end));
         BigInteger totalUsersActive = safe(messageRepository.countDistinctUsers(start, end));
@@ -42,11 +40,7 @@ public class StatsService {
         BigInteger totalMentions = safe(messageRepository.sumMentions(start, end));
         BigInteger totalLinks = safe(messageRepository.sumLinks(start, end));
 
-        Long mostActiveChannelId = messageRepository
-                .findMostActiveChannel(start, end, PageRequest.of(0, 1))
-                .stream()
-                .findFirst()
-                .orElse(null);
+        Long mostActiveChannelId = messageRepository.findMostActiveChannel(start, end, PageRequest.of(0, 1)).stream().findFirst().orElse(null);
 
         Integer peakHour = messageRepository.findPeakHour(start, end);
 
@@ -68,15 +62,15 @@ public class StatsService {
     }
 
     public DailyStats getDailyStats(LocalDate date) {
-        return dailyStatsRepository.getByDate(date == null ? LocalDate.now() : date);
+        return dailyStatsRepository.getFirstByDateOrderByIdDesc(date == null ? LocalDate.now() : date);
     }
 
     @Transactional
-    @Cacheable(value = "dailyStats", key = "#date")
     public EmbedBuilder getDailyStatsEmbed(LocalDate date) {
         log.info("getDailyStatsEmbed date:{}", date);
         var embed = new EmbedBuilder();
 
+        generateDailyStats(date);
         var stats = getDailyStats(date);
 
         if (stats == null) {
@@ -98,31 +92,19 @@ public class StatsService {
         embed.setColor(Color.GREEN);
         embed.setThumbnail("https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExcnU2ZWtzemRsZmRzYzY4NDRkaWRhdGZ6d3prOTBheXg1dWVnNW5iMyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/QbBz1DPfH5ivzFFwt2/giphy.gif");
         embed.setAuthor("HotBct Games");
-        embed.setDescription(stats == null ? "Não temos dados seu pirento." :
-                """
-                        📅 **Data:** %s
-                        
-                        💬 **Mensagens totais:** %,d
-                        👥 **Usuários ativos:** %,d
-                        🔤 **Caracteres enviados:** %,d
-                        
-                        🔗 **Links enviados:** %,d
-                        📣 **Menções feitas:** %,d
-                        
-                        ⏰ **Horário de pico:** %02dh
-                        🔥 **Canal mais ativo:** <#%d>
-                        """
-                        .formatted(
-                                stats.getDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
-                                stats.getTotalMessages().longValue(),
-                                stats.getTotalUsersActive().longValue(),
-                                stats.getTotalCharacters().longValue(),
-                                stats.getTotalLinks().longValue(),
-                                stats.getTotalMentions().longValue(),
-                                stats.getPeakHour() != null ? stats.getPeakHour() : 0,
-                                stats.getMostActiveChannelId() != null ? stats.getMostActiveChannelId() : 0L
-                        )
-        );
+        embed.setDescription(stats == null ? "Não temos dados seu pirento." : """
+                📅 **Data:** %s
+                
+                💬 **Mensagens totais:** %,d
+                👥 **Usuários ativos:** %,d
+                🔤 **Caracteres enviados:** %,d
+                
+                🔗 **Links enviados:** %,d
+                📣 **Menções feitas:** %,d
+                
+                ⏰ **Horário de pico:** %02dh
+                🔥 **Canal mais ativo:** <#%d>
+                """.formatted(stats.getDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")), stats.getTotalMessages().longValue(), stats.getTotalUsersActive().longValue(), stats.getTotalCharacters().longValue(), stats.getTotalLinks().longValue(), stats.getTotalMentions().longValue(), stats.getPeakHour() != null ? stats.getPeakHour() - 3 : 0, stats.getMostActiveChannelId() != null ? stats.getMostActiveChannelId() : 0L));
 
         embed.setFooter("Aprendi com o Sávio Gameplay's");
         return embed;
