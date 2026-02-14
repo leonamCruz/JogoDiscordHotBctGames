@@ -24,7 +24,7 @@ public class ArrombarCommand implements Command {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setColor(Color.GREEN);
         eb.setAuthor(event.getAuthor().getEffectiveName(), event.getAuthor().getAvatarUrl(), event.getAuthor().getEffectiveAvatarUrl());
-        eb.setThumbnail("https://tenor.com/pt-BR/view/donut-sticker-doughnut-donut-cake-junk-food-gif-26298208");
+        eb.setThumbnail("https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbWhnbnBqdTdxMGdqem03d3U4OTA2aXAxeWdsY2VzZXFwazlhZnY5ciZlcD12MV9naWZzX3NlYXJjaCZjdD1n/du4D0b0HWgxGg/giphy.gif");
         eb.setTitle("O %s destruindo a rosquinha do %s, é muito cremoso.".formatted(event.getMessage().getAuthor().getName(), event.getMessage().getMentions().getMembers().getFirst().getUser().getName()));
         eb.setFooter("Sabor de Milk Shake de morango. ˗ˏˋ \uD83C\uDF53 ˎˊ˗");
         eb.setTimestamp(LocalDateTime.now());
