@@ -9,9 +9,15 @@ import top.leonam.hotbctgamess.repository.PrisonRepository;
 import java.util.Random;
 
 @Service
-public class CcCommand extends AbstractCrimeCommand {
+public class TraficoCommand extends AbstractCrimeCommand {
 
-    public CcCommand(
+    private static final int GANHO_MIN = 2600;
+    private static final int GANHO_MAX = 5500;
+    private static final int CHANCE_PRISAO = 27;
+    private static final int LEVEL_MIN = 5;
+    private static final int COOLDOWN_SECONDS = 10;
+
+    public TraficoCommand(
             JobRepository jobRepository,
             EconomyRepository economyRepository,
             LevelRepository levelRepository,
@@ -22,50 +28,47 @@ public class CcCommand extends AbstractCrimeCommand {
     }
 
     @Override
-    public String name() {
-        return "~cc";
-    }
-
-    @Override
     protected int ganhoMin() {
-        return 275;
+        return GANHO_MIN;
     }
 
     @Override
     protected int ganhoMax() {
-        return 1000;
-    }
-
-    @Override
-    protected int cooldown() {
-        return 10;
-    }
-
-    @Override
-    protected int levelMin() {
-        return 3;
-    }
-
-    @Override
-    protected Long minXp() {
-        return 25L;
+        return GANHO_MAX;
     }
 
     @Override
     protected int chancePrisao() {
-        return 17;
+        return CHANCE_PRISAO;
     }
 
     @Override
-    protected String descricaoTrabalho() {
-        return """
-                Você aplicou um CC com sucesso 💳
-                Lucro: R$%.2f | Total de crimes: %d
-                """;
+    protected int levelMin() {
+        return LEVEL_MIN;
+    }
+
+    @Override
+    protected int cooldown() {
+        return COOLDOWN_SECONDS;
     }
 
     @Override
     protected String textoPrisao() {
-        return "\uD83D\uDE94 \uD83D\uDEA8 A polícia rastreou a operação. Você foi em cana.";
+        return "Você foi pego traficando 🚔! Fique preso por um tempo ou pague a fiança.";
+    }
+
+    @Override
+    protected String descricaoTrabalho() {
+        return "Você vendeu drogas 💊 e ganhou R$%.2f. Total de crimes: %d";
+    }
+
+    @Override
+    protected Long minXp() {
+        return 30L;
+    }
+
+    @Override
+    public String name() {
+        return "~trafico";
     }
 }
