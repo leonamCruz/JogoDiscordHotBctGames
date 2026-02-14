@@ -5,34 +5,25 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-
 @Entity
 @Data
 @NoArgsConstructor
-public class Crime {
+public class Job {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private Long totalCc;
+    private LocalDateTime lastJob;
 
     @Column(nullable = false)
-    private Long totalTraffic;
+    private Long totalDeliveries;
 
-    @Column(nullable = false)
-    private Long totalPrison;
-
-    private LocalDateTime lastTraffic;
-
-    @OneToOne(mappedBy = "crime")
+    @OneToOne(mappedBy = "job")
     private Player player;
 
     @PrePersist
     public void setup() {
-        totalCc = 0L;
-        totalTraffic = 0L;
-        totalPrison = 0L;
+        totalDeliveries = 0L;
     }
 }

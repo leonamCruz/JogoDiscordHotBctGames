@@ -9,15 +9,20 @@ import java.math.BigDecimal;
 @Entity
 @Data
 @NoArgsConstructor
-public class Product {
+public class Economy {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String name;
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "player_id", nullable = false)
+
+    @OneToOne(mappedBy = "economy")
     private Player player;
-    @Column(columnDefinition = "TEXT")
-    private String description;
-    private BigDecimal price;
+
+    private BigDecimal money;
+    private BigDecimal btc;
+
+    @PrePersist
+    public void setup(){
+        money = BigDecimal.ZERO;
+        btc = BigDecimal.ZERO;
+    }
 }

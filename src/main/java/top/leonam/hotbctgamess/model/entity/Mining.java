@@ -4,20 +4,32 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Entity
 @Data
 @NoArgsConstructor
-public class Product {
+public class Mining {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String name;
+
     @ManyToOne(optional = false)
     @JoinColumn(name = "player_id", nullable = false)
     private Player player;
-    @Column(columnDefinition = "TEXT")
+
+    @Column(nullable = false)
+    private String name;
+
+    @Column(nullable = false)
     private String description;
-    private BigDecimal price;
+
+    @ManyToOne
+    private Identity identity;
+
+    @Column(nullable = false)
+    private Long remainingHours;
+
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime startTime;
 }

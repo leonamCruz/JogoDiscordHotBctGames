@@ -8,7 +8,7 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.springframework.stereotype.Component;
 import top.leonam.hotbctgamess.interfaces.Command;
 import top.leonam.hotbctgamess.registers.CommandRegistry;
-import top.leonam.hotbctgamess.service.PlayerService;
+import top.leonam.hotbctgamess.service.BdService;
 
 @Component
 @AllArgsConstructor
@@ -16,7 +16,7 @@ import top.leonam.hotbctgamess.service.PlayerService;
 public class JdaListener extends ListenerAdapter {
 
     private CommandRegistry registry;
-    private PlayerService service;
+    private BdService identityService;
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
@@ -27,9 +27,9 @@ public class JdaListener extends ListenerAdapter {
 
         Command command = registry.get(commandName);
 
-        if (command != null) {
-            service.registerIfAbsent(event);
+        identityService.saveIdentityIfNotExists(event);
 
+        if (command != null) {
             EmbedBuilder message = command.execute(event);
             event.getMessage().replyEmbeds(message.build()).queue();
         }

@@ -1,70 +1,58 @@
 package top.leonam.hotbctgamess.model.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.Set;
-
 @Entity
-@Table(name = "player")
-@Setter
-@Getter
-@Builder
-@AllArgsConstructor
+@Data
 @NoArgsConstructor
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Player {
+
+    public Player(Identity identity) {
+        this.identity = identity;
+
+        this.economy = new Economy();
+        this.economy.setPlayer(this);
+
+        this.job = new Job();
+        this.job.setPlayer(this);
+
+        this.crime = new Crime();
+        this.crime.setPlayer(this);
+
+        this.level = new Level();
+        this.level.setPlayer(this);
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "player_id", nullable = false ,unique = true)
-    @EqualsAndHashCode.Include
     private Long id;
 
-    @OneToOne(cascade = CascadeType.ALL,fetch = FetchType.LAZY)
-    @JoinColumn(name = "identity_id", nullable = false, unique = true)
+    @OneToOne(optional = false)
+    @JoinColumn(name = "identity_id", nullable = false)
     private Identity identity;
 
-    @Column(name = "current_level", nullable = false)
-    private Integer currentLevel;
+    @OneToMany(mappedBy = "player")
+    private Set<Product> products;
 
-    @Column(name = "current_xp", nullable = false)
-    private Long currentXp;
+    @OneToMany(mappedBy = "player")
+    private Set<Mining> minings;
 
-    @Column(name = "respect_points", nullable = false)
-    private Integer respectPoints;
+    @OneToOne(cascade = CascadeType.ALL, optional = false)
+    @JoinColumn(name = "economy_id", nullable = false)
+    private Economy economy;
 
-    @ManyToMany
-    @JoinTable(
-            name = "player_achievements",
-            joinColumns = @JoinColumn(name = "player_id"),
-            inverseJoinColumns = @JoinColumn(name = "achievement_id")
-    )
-    private Set<Achievement> achievements;
+    @OneToOne(cascade = CascadeType.ALL, optional = false)
+    @JoinColumn(name = "job_id", nullable = false)
+    private Job job;
 
-    @OneToMany(mappedBy = "player", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<CrimeHistory> crimeHistories;
+    @OneToOne(cascade = CascadeType.ALL, optional = false)
+    @JoinColumn(name = "crime_id", nullable = false)
+    private Crime crime;
 
-    @OneToMany(mappedBy = "player", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<Inventory>  inventorys;
-
-    @OneToOne(mappedBy = "player", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Prison prison;
-
-    @OneToOne(mappedBy = "player", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Account account;
-
-    @OneToOne(mappedBy = "player", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Egg egg;
-
-    @OneToMany(mappedBy = "player", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<PrisonHistory> prisonHistories;
-
-    @PrePersist
-    public void prePersist() {
-        currentLevel = 0;
-        currentXp = 0L;
-        respectPoints = 0;
-    }
-
+    @OneToOne(cascade = CascadeType.ALL, optional = false)
+    @JoinColumn(name = "level_id", nullable = false)
+    private Level level;
 }
