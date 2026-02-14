@@ -1,5 +1,6 @@
 package top.leonam.hotbctgamess.commands;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -10,6 +11,7 @@ import top.leonam.hotbctgamess.model.entity.Level;
 import top.leonam.hotbctgamess.repository.EconomyRepository;
 import top.leonam.hotbctgamess.repository.JobRepository;
 import top.leonam.hotbctgamess.repository.LevelRepository;
+import top.leonam.hotbctgamess.repository.PrisonRepository;
 
 import java.awt.*;
 import java.math.BigDecimal;
@@ -25,6 +27,7 @@ public abstract class AbstractTrabalhoCommand implements Command {
     protected final LevelRepository levelRepository;
     protected final Random random;
 
+    @Transactional
     @Override
     public EmbedBuilder execute(MessageReceivedEvent event) {
         Long discordId = event.getAuthor().getIdLong();
@@ -37,15 +40,19 @@ public abstract class AbstractTrabalhoCommand implements Command {
 
         BigDecimal ganho = executarTrabalho(job);
         atualizarEconomia(discordId, ganho);
-        atualizarXPLevel(level);
+        atualizarXPLevel(level, false);
 
         return buildSuccessEmbed(event, ganho, job.getTotalDeliveries());
     }
 
-    private void atualizarXPLevel(Level level) {
-        level.adicionarXp(minXp());
+    @Transactional
+    protected void atualizarXPLevel(Level level, Boolean foiPreso) {
+        if(foiPreso) level.perderXp(minXp());
+        else level.ganharXp(minXp());
+
         levelRepository.save(level);
     }
+
 
     protected abstract Long minXp();
 
@@ -61,13 +68,13 @@ public abstract class AbstractTrabalhoCommand implements Command {
                 .setFooter("HotBctsGames");
     }
 
-
     protected abstract int ganhoMin();
     protected abstract int ganhoMax();
     protected abstract int cooldown();
     protected abstract int levelMin();
     protected abstract String descricaoTrabalho();
 
+    @Transactional
     protected BigDecimal executarTrabalho(Job job) {
         job.setLastJob(LocalDateTime.now());
         job.setTotalDeliveries(job.getTotalDeliveries() + 1);

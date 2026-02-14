@@ -4,55 +4,68 @@ import org.springframework.stereotype.Service;
 import top.leonam.hotbctgamess.repository.EconomyRepository;
 import top.leonam.hotbctgamess.repository.JobRepository;
 import top.leonam.hotbctgamess.repository.LevelRepository;
+import top.leonam.hotbctgamess.repository.PrisonRepository;
 
 import java.util.Random;
-@Service
-public class IfoodCommand extends AbstractTrabalhoCommand {
 
-    public IfoodCommand(
+@Service
+public class CcCommand extends AbstractCrimeCommand {
+
+    public CcCommand(
             JobRepository jobRepository,
             EconomyRepository economyRepository,
             LevelRepository levelRepository,
+            PrisonRepository prisonRepository,
             Random random
     ) {
-        super(jobRepository, economyRepository, levelRepository, random);
+        super(jobRepository, economyRepository, levelRepository, prisonRepository, random);
     }
 
     @Override
     public String name() {
-        return "~ifood";
-    }
-
-    @Override
-    protected Long minXp() {
-        return 10L;
+        return "~cc";
     }
 
     @Override
     protected int ganhoMin() {
-        return 7;
+        return 275;
     }
 
     @Override
     protected int ganhoMax() {
-        return 10;
+        return 1000;
     }
 
     @Override
     protected int cooldown() {
-        return 30;
+        return 10;
     }
 
     @Override
     protected int levelMin() {
-        return 0;
+        return 3;
+    }
+
+    @Override
+    protected Long minXp() {
+        return 25L;
+    }
+
+    @Override
+    protected int chancePrisao() {
+        return 10;
     }
 
     @Override
     protected String descricaoTrabalho() {
         return """
-                Você trabalhou entregando iFood 🚲 e ganhou R$%.2f.
-                Total de entregas: %d
+                Você aplicou um CC com sucesso 💳
+                Lucro: R$%.2f | Total de crimes: %d
                 """;
+    }
+
+    @Override
+    protected String textoPrisao() {
+        return "\uD83D\uDE94 \uD83D\uDEA8 A polícia rastreou a operação. Você foi em cana.";
     }
 }

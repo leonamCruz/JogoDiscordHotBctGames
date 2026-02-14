@@ -27,9 +27,9 @@ public class JdaListener extends ListenerAdapter {
 
         Command command = registry.get(commandName);
 
-        identityService.saveIdentityIfNotExists(event);
-
         if (command != null) {
+            identityService.saveIdentityIfNotExists(event);
+
             EmbedBuilder message = command.execute(event);
             event.getMessage().replyEmbeds(message.build()).queue();
         }

@@ -22,10 +22,10 @@ public class BdService {
 
         Identity identity = identityRepository
                 .findByDiscordId(discordId)
-                .orElseGet(() -> identityRepository.save(new Identity(name, discordId)));
+                .orElseGet(() -> identityRepository.saveAndFlush(new Identity(name, discordId)));
 
         playerRepository.findByIdentity_DiscordId(discordId)
-                .orElseGet(() -> playerRepository.save(new Player(identity)));
+                .orElseGet(() -> playerRepository.saveAndFlush(new Player(identity)));
     }
 
 }

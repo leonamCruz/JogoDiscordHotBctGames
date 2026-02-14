@@ -24,6 +24,9 @@ public class Player {
 
         this.level = new Level();
         this.level.setPlayer(this);
+
+        this.prison = new Prison();
+        this.prison.setPlayer(this);
     }
 
     @Id
@@ -55,4 +58,8 @@ public class Player {
     @OneToOne(cascade = CascadeType.ALL, optional = false)
     @JoinColumn(name = "level_id", nullable = false)
     private Level level;
+
+    @OneToOne(cascade = CascadeType.ALL, optional = false)
+    @JoinColumn(name = "prison_id", nullable = false)
+    private Prison prison;
 }
