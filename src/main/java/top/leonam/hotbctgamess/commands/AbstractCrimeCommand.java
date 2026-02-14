@@ -123,6 +123,7 @@ public abstract class AbstractCrimeCommand extends AbstractTrabalhoCommand {
                 .setAuthor(event.getAuthor().getEffectiveName())
                 .setTimestamp(LocalDateTime.now())
                 .setColor(Color.DARK_GRAY)
+                .setUrl("https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcjZydGFlejQ0a2ZiOXM4eHRjYm83OGRvdzZxcDF3czk5aTI2MXR4YSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/kyQ5ow8qDy78VccGyg/giphy.gif")
                 .setFooter("HotBctsGames - Dica: pague a fiança com ~fiança");
     }
 }
