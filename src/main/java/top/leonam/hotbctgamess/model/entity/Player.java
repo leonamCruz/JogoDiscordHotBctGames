@@ -6,6 +6,15 @@ import lombok.NoArgsConstructor;
 
 import java.util.Set;
 @Entity
+@Table(indexes = {
+        @Index(name = "idx_player_identity_id", columnList = "identity_id"),
+        @Index(name = "idx_player_economy_id", columnList = "economy_id"),
+        @Index(name = "idx_player_job_id", columnList = "job_id"),
+        @Index(name = "idx_player_crime_id", columnList = "crime_id"),
+        @Index(name = "idx_player_level_id", columnList = "level_id"),
+        @Index(name = "idx_player_prison_id", columnList = "prison_id"),
+        @Index(name = "idx_player_university_id", columnList = "university_id")
+})
 @Data
 @NoArgsConstructor
 public class Player {
@@ -27,6 +36,9 @@ public class Player {
 
         this.prison = new Prison();
         this.prison.setPlayer(this);
+
+        this.university = new University();
+        this.university.setPlayer(this);
     }
 
     @Id
@@ -62,4 +74,8 @@ public class Player {
     @OneToOne(cascade = CascadeType.ALL, optional = false)
     @JoinColumn(name = "prison_id", nullable = false)
     private Prison prison;
+
+    @OneToOne(cascade = CascadeType.ALL, optional = false)
+    @JoinColumn(name = "university_id", nullable = false)
+    private University university;
 }

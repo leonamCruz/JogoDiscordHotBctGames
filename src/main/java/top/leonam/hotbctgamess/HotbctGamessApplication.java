@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 import java.util.Random;
+import java.util.TimeZone;
 
 @SpringBootApplication
 @EnableJpaRepositories
@@ -16,6 +17,7 @@ import java.util.Random;
 public class HotbctGamessApplication {
 
     public static void main(String[] args) {
+        TimeZone.setDefault(TimeZone.getTimeZone("America/Sao_Paulo"));
         SpringApplication.run(HotbctGamessApplication.class, args);
     }
 

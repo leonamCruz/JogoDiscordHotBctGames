@@ -5,6 +5,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
+@Table(indexes = {
+        @Index(name = "idx_identity_discord_id", columnList = "discord_id", unique = true)
+})
 @Data
 @NoArgsConstructor
 public class Identity {
@@ -18,6 +21,6 @@ public class Identity {
     private Long id;
     @Column(nullable = false)
     private String name;
-    @Column(nullable = false)
+    @Column(name = "discord_id", nullable = false, unique = true)
     private Long discordId;
 }

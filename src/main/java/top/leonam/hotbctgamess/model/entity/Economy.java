@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @Entity
 @Data
@@ -17,12 +18,23 @@ public class Economy {
     @OneToOne(mappedBy = "economy")
     private Player player;
 
+    @Column(precision = 20, scale = 2)
     private BigDecimal money;
+    @Column(precision = 20, scale = 10)
     private BigDecimal btc;
+    private Long energy;
+    private LocalDate lastEnergyPayment;
 
     @PrePersist
     public void setup(){
-        money = BigDecimal.ZERO;
-        btc = BigDecimal.ZERO;
+        if (money == null) {
+            money = BigDecimal.ZERO;
+        }
+        if (btc == null) {
+            btc = BigDecimal.ZERO;
+        }
+        if (energy == null) {
+            energy = 0L;
+        }
     }
 }

@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service;
 import top.leonam.hotbctgamess.repository.EconomyRepository;
 import top.leonam.hotbctgamess.repository.JobRepository;
 import top.leonam.hotbctgamess.repository.LevelRepository;
+import top.leonam.hotbctgamess.repository.UniversityRepository;
 
 import java.util.Random;
 
@@ -14,14 +15,15 @@ public class UberCommand extends AbstractTrabalhoCommand {
             JobRepository jobRepository,
             EconomyRepository economyRepository,
             LevelRepository levelRepository,
+            UniversityRepository universityRepository,
             Random random
     ) {
-        super(jobRepository, economyRepository, levelRepository, random);
+        super(jobRepository, economyRepository, levelRepository, universityRepository,random);
     }
 
     @Override
     public String name() {
-        return "~uber";
+        return ".uber";
     }
 
     @Override
@@ -41,7 +43,7 @@ public class UberCommand extends AbstractTrabalhoCommand {
 
     @Override
     protected int cooldown() {
-        return 45;
+        return 3;
     }
 
     @Override
@@ -52,7 +54,8 @@ public class UberCommand extends AbstractTrabalhoCommand {
     @Override
     protected String descricaoTrabalho() {
         return """
-                Você rodou como Uber 🚗 e ganhou R$%.2f.
+                Trabalho: Uber 🚗
+                Ganho: R$%.2f
                 Total de corridas: %d
                 """;
     }

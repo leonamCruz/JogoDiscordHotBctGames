@@ -7,6 +7,9 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 
 @Entity
+@Table(indexes = {
+        @Index(name = "idx_product_player_id", columnList = "player_id")
+})
 @Data
 @NoArgsConstructor
 public class Product {
@@ -20,4 +23,5 @@ public class Product {
     @Column(columnDefinition = "TEXT")
     private String description;
     private BigDecimal price;
+    private Integer storeProductId;
 }

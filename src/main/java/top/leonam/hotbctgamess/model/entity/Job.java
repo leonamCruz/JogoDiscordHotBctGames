@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 @Entity
 @Data
@@ -15,15 +16,25 @@ public class Job {
     private Long id;
 
     private LocalDateTime lastJob;
+    private LocalDateTime lastCrime;
+    private LocalDate lastRobberyDate;
 
     @Column(nullable = false)
-    private Long totalDeliveries;
+    private Long totalJobs;
+
+    @Column(nullable = false)
+    private Long totalCrimes;
+
+    @Column(nullable = false)
+    private Long robberiesToday;
 
     @OneToOne(mappedBy = "job")
     private Player player;
 
     @PrePersist
     public void setup() {
-        totalDeliveries = 0L;
+        totalJobs = 0L;
+        totalCrimes = 0L;
+        robberiesToday = 0L;
     }
 }

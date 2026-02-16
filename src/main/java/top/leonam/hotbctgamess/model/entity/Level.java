@@ -23,7 +23,7 @@ public class Level {
     }
 
     public long xpParaProximoNivel() {
-        return 100L * level * level;
+        return 80L * level * level;
     }
 
     public void ganharXp(long valor) {

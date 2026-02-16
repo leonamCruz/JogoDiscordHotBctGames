@@ -1,6 +1,7 @@
 package top.leonam.hotbctgamess.commands;
 
 import jakarta.transaction.Transactional;
+import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -11,21 +12,23 @@ import top.leonam.hotbctgamess.model.entity.Level;
 import top.leonam.hotbctgamess.repository.EconomyRepository;
 import top.leonam.hotbctgamess.repository.JobRepository;
 import top.leonam.hotbctgamess.repository.LevelRepository;
-import top.leonam.hotbctgamess.repository.PrisonRepository;
+import top.leonam.hotbctgamess.repository.UniversityRepository;
 
 import java.awt.*;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Random;
 
-@RequiredArgsConstructor
+@AllArgsConstructor
 public abstract class AbstractTrabalhoCommand implements Command {
 
-    protected final JobRepository jobRepository;
-    protected final EconomyRepository economyRepository;
-    protected final LevelRepository levelRepository;
-    protected final Random random;
+    protected JobRepository jobRepository;
+    protected EconomyRepository economyRepository;
+    protected LevelRepository levelRepository;
+    protected UniversityRepository universityRepository;
+    protected Random random;
 
     @Transactional
     @Override
@@ -38,11 +41,11 @@ public abstract class AbstractTrabalhoCommand implements Command {
 
         if (isOnCooldown(job)) return buildCooldownEmbed(event, job);
 
-        BigDecimal ganho = executarTrabalho(job);
+        BigDecimal ganho = executarTrabalho(job, universityRepository.findByPlayer_Identity_DiscordId(discordId).getConseguiu());
         atualizarEconomia(discordId, ganho);
         atualizarXPLevel(level, false);
 
-        return buildSuccessEmbed(event, ganho, job.getTotalDeliveries());
+        return buildSuccessEmbed(event, ganho, job.getTotalJobs());
     }
 
     @Transactional
@@ -60,10 +63,12 @@ public abstract class AbstractTrabalhoCommand implements Command {
         return new EmbedBuilder()
                 .setTitle("Você não tem level suficiente ⭐")
                 .setDescription("""
-                        Atualmente você é level %d e precisa de no minimo %d.
+                        Level atual: %d
+                        Level minimo: %d
                         """.formatted(level.getLevel(), levelMin()))
                 .setAuthor(event.getAuthor().getEffectiveName())
-                .setTimestamp(LocalDateTime.now())
+                .setThumbnail(event.getAuthor().getEffectiveAvatarUrl())
+                .setTimestamp(Instant.now())
                 .setColor(Color.RED)
                 .setFooter("HotBctsGames");
     }
@@ -75,12 +80,16 @@ public abstract class AbstractTrabalhoCommand implements Command {
     protected abstract String descricaoTrabalho();
 
     @Transactional
-    protected BigDecimal executarTrabalho(Job job) {
+    protected BigDecimal executarTrabalho(Job job, boolean temFaculdade) {
         job.setLastJob(LocalDateTime.now());
-        job.setTotalDeliveries(job.getTotalDeliveries() + 1);
+        job.setTotalJobs(job.getTotalJobs() + 1);
         jobRepository.save(job);
 
-        return BigDecimal.valueOf(random.nextInt(ganhoMin(), ganhoMax()));
+        if(!temFaculdade){
+            return BigDecimal.valueOf(random.nextInt(ganhoMin(), ganhoMax()));
+        }
+        //aumento de 20%
+        return BigDecimal.valueOf(random.nextInt(ganhoMin(), ganhoMax())).multiply(BigDecimal.valueOf(120));
     }
 
     protected void atualizarEconomia(Long discordId, BigDecimal valor) {
@@ -105,10 +114,12 @@ public abstract class AbstractTrabalhoCommand implements Command {
         return new EmbedBuilder()
                 .setTitle("Trabalhe menos, viva mais.")
                 .setDescription("""
-                        Você está cansado. Espere %d segundos.
+                        Status: Cansado 😴
+                        Tempo restante: %d segundos
                         """.formatted(getCooldownSeconds(job)))
                 .setAuthor(event.getAuthor().getEffectiveName())
-                .setTimestamp(LocalDateTime.now())
+                .setThumbnail(event.getAuthor().getEffectiveAvatarUrl())
+                .setTimestamp(Instant.now())
                 .setColor(Color.RED)
                 .setFooter("HotBctsGames");
     }
@@ -122,7 +133,8 @@ public abstract class AbstractTrabalhoCommand implements Command {
                 .setTitle("O trabalho traz dignidade ao homem.")
                 .setDescription(descricaoTrabalho().formatted(ganho, total))
                 .setAuthor(event.getAuthor().getEffectiveName())
-                .setTimestamp(LocalDateTime.now())
+                .setThumbnail(event.getAuthor().getEffectiveAvatarUrl())
+                .setTimestamp(Instant.now())
                 .setColor(Color.RED)
                 .setFooter("HotBctsGames");
     }

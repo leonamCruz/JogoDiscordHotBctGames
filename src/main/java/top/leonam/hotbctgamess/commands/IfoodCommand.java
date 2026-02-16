@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service;
 import top.leonam.hotbctgamess.repository.EconomyRepository;
 import top.leonam.hotbctgamess.repository.JobRepository;
 import top.leonam.hotbctgamess.repository.LevelRepository;
+import top.leonam.hotbctgamess.repository.UniversityRepository;
 
 import java.util.Random;
 @Service
@@ -13,14 +14,15 @@ public class IfoodCommand extends AbstractTrabalhoCommand {
             JobRepository jobRepository,
             EconomyRepository economyRepository,
             LevelRepository levelRepository,
+            UniversityRepository universityRepository,
             Random random
     ) {
-        super(jobRepository, economyRepository, levelRepository, random);
+        super(jobRepository, economyRepository, levelRepository, universityRepository,random);
     }
 
     @Override
     public String name() {
-        return "~ifood";
+        return ".ifood";
     }
 
     @Override
@@ -40,7 +42,7 @@ public class IfoodCommand extends AbstractTrabalhoCommand {
 
     @Override
     protected int cooldown() {
-        return 30;
+        return 3;
     }
 
     @Override
@@ -51,7 +53,8 @@ public class IfoodCommand extends AbstractTrabalhoCommand {
     @Override
     protected String descricaoTrabalho() {
         return """
-                Você trabalhou entregando iFood 🚲 e ganhou R$%.2f.
+                Trabalho: Entregas iFood 🚲
+                Ganho: R$%.2f
                 Total de entregas: %d
                 """;
     }

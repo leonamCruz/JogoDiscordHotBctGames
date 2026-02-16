@@ -1,10 +1,7 @@
 package top.leonam.hotbctgamess.commands;
 
 import org.springframework.stereotype.Service;
-import top.leonam.hotbctgamess.repository.EconomyRepository;
-import top.leonam.hotbctgamess.repository.JobRepository;
-import top.leonam.hotbctgamess.repository.LevelRepository;
-import top.leonam.hotbctgamess.repository.PrisonRepository;
+import top.leonam.hotbctgamess.repository.*;
 
 import java.util.Random;
 
@@ -13,7 +10,7 @@ public class TraficoCommand extends AbstractCrimeCommand {
 
     private static final int GANHO_MIN = 2600;
     private static final int GANHO_MAX = 5500;
-    private static final int CHANCE_PRISAO = 27;
+    private static final int CHANCE_PRISAO = 22;
     private static final int LEVEL_MIN = 5;
     private static final int COOLDOWN_SECONDS = 10;
 
@@ -22,9 +19,10 @@ public class TraficoCommand extends AbstractCrimeCommand {
             EconomyRepository economyRepository,
             LevelRepository levelRepository,
             PrisonRepository prisonRepository,
+            UniversityRepository universityRepository,
             Random random
     ) {
-        super(jobRepository, economyRepository, levelRepository, prisonRepository, random);
+        super(jobRepository, economyRepository, levelRepository, prisonRepository,universityRepository, random);
     }
 
     @Override
@@ -49,7 +47,7 @@ public class TraficoCommand extends AbstractCrimeCommand {
 
     @Override
     protected int cooldown() {
-        return COOLDOWN_SECONDS;
+        return 3;
     }
 
     @Override
@@ -59,7 +57,11 @@ public class TraficoCommand extends AbstractCrimeCommand {
 
     @Override
     protected String descricaoTrabalho() {
-        return "Você vendeu drogas 💊 e ganhou R$%.2f. Total de crimes: %d";
+        return """
+                Crime: Trafico 💊
+                Lucro: R$%.2f
+                Total de crimes: %d
+                """;
     }
 
     @Override
@@ -69,6 +71,6 @@ public class TraficoCommand extends AbstractCrimeCommand {
 
     @Override
     public String name() {
-        return "~trafico";
+        return ".trafico";
     }
 }

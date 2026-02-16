@@ -7,6 +7,9 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
+@Table(indexes = {
+        @Index(name = "idx_mining_player_id", columnList = "player_id")
+})
 @Data
 @NoArgsConstructor
 public class Mining {
