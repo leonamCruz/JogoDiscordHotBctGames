@@ -11,6 +11,7 @@ import top.leonam.hotbctgamess.model.entity.Level;
 import top.leonam.hotbctgamess.repository.EconomyRepository;
 import top.leonam.hotbctgamess.repository.LevelRepository;
 import top.leonam.hotbctgamess.repository.ProductRepository;
+import top.leonam.hotbctgamess.service.CacheService;
 import top.leonam.hotbctgamess.service.BtcMarketService;
 import top.leonam.hotbctgamess.util.MiningCalculator;
 
@@ -32,17 +33,20 @@ public class MinerarCommand implements Command {
     private final LevelRepository levelRepository;
     private final ProductRepository productRepository;
     private final BtcMarketService marketService;
+    private final CacheService cacheService;
 
     public MinerarCommand(
             EconomyRepository economyRepository,
             LevelRepository levelRepository,
             ProductRepository productRepository,
-            BtcMarketService marketService
+            BtcMarketService marketService,
+            CacheService cacheService
     ) {
         this.economyRepository = economyRepository;
         this.levelRepository = levelRepository;
         this.productRepository = productRepository;
         this.marketService = marketService;
+        this.cacheService = cacheService;
     }
 
     @Override
@@ -125,6 +129,7 @@ public class MinerarCommand implements Command {
         economyRepository.save(economy);
         marketService.applyMining(btcMined);
         addMiningXp(discordId);
+        cacheService.evictPlayer(discordId);
 
         return new EmbedBuilder()
                 .setTitle("Mineracao automatica concluida")

@@ -8,6 +8,7 @@ import top.leonam.hotbctgamess.model.entity.Job;
 import top.leonam.hotbctgamess.model.entity.Level;
 import top.leonam.hotbctgamess.model.entity.Prison;
 import top.leonam.hotbctgamess.repository.*;
+import top.leonam.hotbctgamess.service.CacheService;
 
 import java.awt.*;
 import java.math.BigDecimal;
@@ -26,9 +27,10 @@ public abstract class AbstractCrimeCommand extends AbstractTrabalhoCommand {
             LevelRepository levelRepository,
             PrisonRepository prisonRepository,
             UniversityRepository universityRepository,
+            CacheService cacheService,
             Random random
     ) {
-        super(jobRepository, economyRepository, levelRepository, universityRepository, random);
+        super(jobRepository, economyRepository, levelRepository, universityRepository, cacheService, random);
         this.prisonRepository = prisonRepository;
     }
 
@@ -68,6 +70,7 @@ public abstract class AbstractCrimeCommand extends AbstractTrabalhoCommand {
         if (foiPreso()) {
             aplicarPenalidade(discordId);
             atualizarXPLevel(level, true);
+            cacheService.evictPlayer(discordId);
 
             prison = prisonRepository.findByPlayer_Identity_DiscordId(discordId);
             return buildPresoEmbed(event, segundosRestantesPrisao(prison));
@@ -75,10 +78,12 @@ public abstract class AbstractCrimeCommand extends AbstractTrabalhoCommand {
 
         // 6️⃣ Sucesso
         BigDecimal ganho = BigDecimal.valueOf(random.nextInt(ganhoMin(), ganhoMax()));
+        long total = incrementarEObterTotal(job);
         atualizarEconomia(discordId, ganho);
         atualizarXPLevel(level, false);
+        cacheService.evictPlayer(discordId);
 
-        return buildSuccessEmbed(event, ganho, job.getTotalCrimes());
+        return buildSuccessEmbed(event, ganho, total);
     }
 
     // ================= COOLDOWN CRIME =================
@@ -146,6 +151,7 @@ public abstract class AbstractCrimeCommand extends AbstractTrabalhoCommand {
 
     protected abstract int chancePrisao();
     protected abstract String textoPrisao();
+    protected abstract long incrementarEObterTotal(Job job);
 
     // 🔥 GIF MANTIDO
     protected EmbedBuilder buildPresoEmbed(MessageReceivedEvent event, long segundosRestantes) {

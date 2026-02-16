@@ -93,6 +93,18 @@ public class PerfilCommand implements Command {
         long totalCrimes = job == null ? 0L : safeLong(job.getTotalCrimes());
         long currentLevel = level == null ? 1L : level.getLevel();
         double score = RankingCalculator.score(money, btc, totalJobs, totalCrimes, products);
+        long totalIfood = job == null ? 0L : safeLong(job.getTotalIfood());
+        long totalUber = job == null ? 0L : safeLong(job.getTotalUber());
+        long totalEstoque = job == null ? 0L : safeLong(job.getTotalEstoque());
+        long totalGarcom = job == null ? 0L : safeLong(job.getTotalGarcom());
+        long totalPedreiro = job == null ? 0L : safeLong(job.getTotalPedreiro());
+        long totalCc = job == null ? 0L : safeLong(job.getTotalCc());
+        long totalTrafico = job == null ? 0L : safeLong(job.getTotalTrafico());
+        long totalSequestro = job == null ? 0L : safeLong(job.getTotalSequestro());
+        long totalHackear = job == null ? 0L : safeLong(job.getTotalHackear());
+        long totalLaranja = job == null ? 0L : safeLong(job.getTotalLaranja());
+        long totalBet = job == null ? 0L : safeLong(job.getTotalBet());
+        long totalRoubar = job == null ? 0L : safeLong(job.getTotalRoubar());
 
         String descricao = """
                 Score: %.1f ⭐
@@ -102,7 +114,39 @@ public class PerfilCommand implements Command {
                 Trabalhos: %d 🛠
                 Crimes: %d 😈
                 Produtos: %d 📦
-                """.formatted(score, currentLevel, money, formatBtc(btc), totalJobs, totalCrimes, products);
+                iFood: %d
+                Uber: %d
+                Estoque: %d
+                Garcom: %d
+                Pedreiro: %d
+                CC: %d
+                Trafico: %d
+                Sequestro: %d
+                Hackear: %d
+                Laranja: %d
+                Bet: %d
+                Roubar: %d
+                """.formatted(
+                score,
+                currentLevel,
+                money,
+                formatBtc(btc),
+                totalJobs,
+                totalCrimes,
+                products,
+                totalIfood,
+                totalUber,
+                totalEstoque,
+                totalGarcom,
+                totalPedreiro,
+                totalCc,
+                totalTrafico,
+                totalSequestro,
+                totalHackear,
+                totalLaranja,
+                totalBet,
+                totalRoubar
+        );
 
         return new EmbedBuilder()
                 .setTitle("Perfil de %s 👤".formatted(targetMember.getEffectiveName()))

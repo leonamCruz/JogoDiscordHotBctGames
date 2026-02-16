@@ -13,6 +13,7 @@ import top.leonam.hotbctgamess.repository.EconomyRepository;
 import top.leonam.hotbctgamess.repository.JobRepository;
 import top.leonam.hotbctgamess.repository.LevelRepository;
 import top.leonam.hotbctgamess.repository.UniversityRepository;
+import top.leonam.hotbctgamess.service.CacheService;
 
 import java.awt.*;
 import java.math.BigDecimal;
@@ -28,6 +29,7 @@ public abstract class AbstractTrabalhoCommand implements Command {
     protected EconomyRepository economyRepository;
     protected LevelRepository levelRepository;
     protected UniversityRepository universityRepository;
+    protected CacheService cacheService;
     protected Random random;
 
     @Transactional
@@ -42,10 +44,12 @@ public abstract class AbstractTrabalhoCommand implements Command {
         if (isOnCooldown(job)) return buildCooldownEmbed(event, job);
 
         BigDecimal ganho = executarTrabalho(job, universityRepository.findByPlayer_Identity_DiscordId(discordId).getConseguiu());
+        long total = incrementarEObterTotal(job);
         atualizarEconomia(discordId, ganho);
         atualizarXPLevel(level, false);
+        cacheService.evictPlayer(discordId);
 
-        return buildSuccessEmbed(event, ganho, job.getTotalJobs());
+        return buildSuccessEmbed(event, ganho, total);
     }
 
     @Transactional
@@ -78,6 +82,7 @@ public abstract class AbstractTrabalhoCommand implements Command {
     protected abstract int cooldown();
     protected abstract int levelMin();
     protected abstract String descricaoTrabalho();
+    protected abstract long incrementarEObterTotal(Job job);
 
     @Transactional
     protected BigDecimal executarTrabalho(Job job, boolean temFaculdade) {

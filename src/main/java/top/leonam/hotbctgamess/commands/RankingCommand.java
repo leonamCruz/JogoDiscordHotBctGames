@@ -4,11 +4,8 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import org.springframework.stereotype.Service;
 import top.leonam.hotbctgamess.interfaces.Command;
-import top.leonam.hotbctgamess.model.entity.Economy;
 import top.leonam.hotbctgamess.dto.RankingRow;
-import top.leonam.hotbctgamess.repository.EconomyRepository;
 import top.leonam.hotbctgamess.repository.PlayerRepository;
-import top.leonam.hotbctgamess.repository.ProductRepository;
 import top.leonam.hotbctgamess.util.RankingCalculator;
 
 import java.awt.*;
@@ -69,7 +66,19 @@ public class RankingCommand implements Command {
                     totalJobs,
                     totalCrimes,
                     products,
-                    currentLevel
+                    currentLevel,
+                    safeLong(row.totalIfood()),
+                    safeLong(row.totalUber()),
+                    safeLong(row.totalEstoque()),
+                    safeLong(row.totalGarcom()),
+                    safeLong(row.totalPedreiro()),
+                    safeLong(row.totalCc()),
+                    safeLong(row.totalTrafico()),
+                    safeLong(row.totalSequestro()),
+                    safeLong(row.totalHackear()),
+                    safeLong(row.totalLaranja()),
+                    safeLong(row.totalBet()),
+                    safeLong(row.totalRoubar())
             ));
         }
 
@@ -87,6 +96,18 @@ public class RankingCommand implements Command {
                     Trabalhos: %d 🛠
                     Crimes: %d 😈
                     Itens: %d 📦
+                    iFood: %d
+                    Uber: %d
+                    Estoque: %d
+                    Garcom: %d
+                    Pedreiro: %d
+                    CC: %d
+                    Trafico: %d
+                    Sequestro: %d
+                    Hackear: %d
+                    Laranja: %d
+                    Bet: %d
+                    Roubar: %d
                     """.formatted(
                             position++,
                             entry.name,
@@ -96,7 +117,19 @@ public class RankingCommand implements Command {
                             formatBtc(entry.btc),
                             entry.totalJobs,
                             entry.totalCrimes,
-                            entry.products
+                            entry.products,
+                            entry.totalIfood,
+                            entry.totalUber,
+                            entry.totalEstoque,
+                            entry.totalGarcom,
+                            entry.totalPedreiro,
+                            entry.totalCc,
+                            entry.totalTrafico,
+                            entry.totalSequestro,
+                            entry.totalHackear,
+                            entry.totalLaranja,
+                            entry.totalBet,
+                            entry.totalRoubar
                     )).append("\n");
         }
 
@@ -138,7 +171,19 @@ public class RankingCommand implements Command {
             long totalJobs,
             long totalCrimes,
             long products,
-            long level
+            long level,
+            long totalIfood,
+            long totalUber,
+            long totalEstoque,
+            long totalGarcom,
+            long totalPedreiro,
+            long totalCc,
+            long totalTrafico,
+            long totalSequestro,
+            long totalHackear,
+            long totalLaranja,
+            long totalBet,
+            long totalRoubar
     ) {
     }
 

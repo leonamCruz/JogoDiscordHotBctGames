@@ -34,11 +34,18 @@ public class AjudaCommand implements Command {
                 Trabalhos
                 .ifood - entrega iFood e ganha dinheiro. (Level 0) 🚲
                 .uber - roda de Uber e ganha dinheiro. (Level 3) 🚗
+                .estoque - trabalha no estoque. (Level 0) 📦
+                .garçom - trabalha como garcom. (Level 1) 🍽️
+                .pedreiro - trabalha em obras. (Level 2) 🧱
 
                 Crimes
                 .cc - aplica golpes e ganha dinheiro. (Level 1) 💳
                 .trafico - vende drogas e ganha dinheiro. (Level 5) 💊
                 .roubar @user - rouba um jogador. (3x/dia) 🧤
+                .laranja - abre conta laranja. (Level 2) 🥕
+                .bet - opera bet clandestina. (Level 3) 🎲
+                .hackear - hackeia sistemas. (Level 4) 💻
+                .sequestro - alto risco, alto lucro. (Level 6) 🚨
 
                 Social
                 .arrombar @user - interacao com mencao. 🍩

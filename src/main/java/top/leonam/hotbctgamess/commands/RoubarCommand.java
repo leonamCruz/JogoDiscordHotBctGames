@@ -14,6 +14,7 @@ import top.leonam.hotbctgamess.repository.EconomyRepository;
 import top.leonam.hotbctgamess.repository.JobRepository;
 import top.leonam.hotbctgamess.repository.LevelRepository;
 import top.leonam.hotbctgamess.repository.PrisonRepository;
+import top.leonam.hotbctgamess.service.CacheService;
 
 import java.awt.*;
 import java.math.BigDecimal;
@@ -33,6 +34,7 @@ public class RoubarCommand implements Command {
     private final EconomyRepository economyRepository;
     private final LevelRepository levelRepository;
     private final PrisonRepository prisonRepository;
+    private final CacheService cacheService;
     private final Random random;
 
     public RoubarCommand(
@@ -40,12 +42,14 @@ public class RoubarCommand implements Command {
             EconomyRepository economyRepository,
             LevelRepository levelRepository,
             PrisonRepository prisonRepository,
+            CacheService cacheService,
             Random random
     ) {
         this.jobRepository = jobRepository;
         this.economyRepository = economyRepository;
         this.levelRepository = levelRepository;
         this.prisonRepository = prisonRepository;
+        this.cacheService = cacheService;
         this.random = random;
     }
 
@@ -113,6 +117,10 @@ public class RoubarCommand implements Command {
         }
 
         job.setRobberiesToday(job.getRobberiesToday() + 1);
+        if (job.getTotalRoubar() == null) {
+            job.setTotalRoubar(0L);
+        }
+        job.setTotalRoubar(job.getTotalRoubar() + 1);
         jobRepository.save(job);
 
         if (random.nextInt(100) < PRISON_CHANCE) {
@@ -145,6 +153,8 @@ public class RoubarCommand implements Command {
         attackerEconomy.setMoney(safeMoney(attackerEconomy.getMoney()).add(stolen));
         economyRepository.save(targetEconomy);
         economyRepository.save(attackerEconomy);
+        cacheService.evictPlayer(discordId);
+        cacheService.evictPlayer(alvo.getIdLong());
 
         return new EmbedBuilder()
                 .setTitle("Roubo concluido 🤑")
@@ -153,12 +163,14 @@ public class RoubarCommand implements Command {
                         Percentual: %d%%
                         Valor roubado: R$%.2f 💸
                         Roubos hoje: %d/%d
+                        Total de roubos: %d
                         """.formatted(
                         alvo.getEffectiveName(),
                         percent,
                         stolen,
                         job.getRobberiesToday(),
-                        DAILY_LIMIT
+                        DAILY_LIMIT,
+                        job.getTotalRoubar()
                 ))
                 .setAuthor(event.getAuthor().getEffectiveName())
                 .setThumbnail(event.getAuthor().getEffectiveAvatarUrl())
@@ -190,6 +202,7 @@ public class RoubarCommand implements Command {
         }
         prison.setLastPrison(java.time.LocalDateTime.now());
         prisonRepository.save(prison);
+        cacheService.evictPlayer(discordId);
 
         return new EmbedBuilder()
                 .setTitle("Você está preso 🚓")

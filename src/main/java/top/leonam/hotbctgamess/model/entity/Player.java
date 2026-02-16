@@ -28,9 +28,6 @@ public class Player {
         this.job = new Job();
         this.job.setPlayer(this);
 
-        this.crime = new Crime();
-        this.crime.setPlayer(this);
-
         this.level = new Level();
         this.level.setPlayer(this);
 
@@ -52,9 +49,6 @@ public class Player {
     @OneToMany(mappedBy = "player")
     private Set<Product> products;
 
-    @OneToMany(mappedBy = "player")
-    private Set<Mining> minings;
-
     @OneToOne(cascade = CascadeType.ALL, optional = false)
     @JoinColumn(name = "economy_id", nullable = false)
     private Economy economy;
@@ -62,10 +56,6 @@ public class Player {
     @OneToOne(cascade = CascadeType.ALL, optional = false)
     @JoinColumn(name = "job_id", nullable = false)
     private Job job;
-
-    @OneToOne(cascade = CascadeType.ALL, optional = false)
-    @JoinColumn(name = "crime_id", nullable = false)
-    private Crime crime;
 
     @OneToOne(cascade = CascadeType.ALL, optional = false)
     @JoinColumn(name = "level_id", nullable = false)

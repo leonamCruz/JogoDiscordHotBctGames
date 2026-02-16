@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import top.leonam.hotbctgamess.interfaces.Command;
 import top.leonam.hotbctgamess.model.entity.Economy;
 import top.leonam.hotbctgamess.repository.EconomyRepository;
+import top.leonam.hotbctgamess.service.CacheService;
 import top.leonam.hotbctgamess.service.EnergyService;
 
 import java.awt.*;
@@ -19,10 +20,16 @@ public class EnergiaCommand implements Command {
 
     private final EconomyRepository economyRepository;
     private final EnergyService energyService;
+    private final CacheService cacheService;
 
-    public EnergiaCommand(EconomyRepository economyRepository, EnergyService energyService) {
+    public EnergiaCommand(
+            EconomyRepository economyRepository,
+            EnergyService energyService,
+            CacheService cacheService
+    ) {
         this.economyRepository = economyRepository;
         this.energyService = energyService;
+        this.cacheService = cacheService;
     }
 
     @Override
@@ -70,6 +77,8 @@ public class EnergiaCommand implements Command {
                     .setColor(Color.RED)
                     .setFooter("HotBctsGames");
         }
+
+        cacheService.evictPlayer(discordId);
 
         return new EmbedBuilder()
                 .setTitle("Energia carregada")

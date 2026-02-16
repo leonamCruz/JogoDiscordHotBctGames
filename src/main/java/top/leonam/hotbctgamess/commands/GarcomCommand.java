@@ -9,10 +9,11 @@ import top.leonam.hotbctgamess.repository.UniversityRepository;
 import top.leonam.hotbctgamess.service.CacheService;
 
 import java.util.Random;
-@Service
-public class IfoodCommand extends AbstractTrabalhoCommand {
 
-    public IfoodCommand(
+@Service
+public class GarcomCommand extends AbstractTrabalhoCommand {
+
+    public GarcomCommand(
             JobRepository jobRepository,
             EconomyRepository economyRepository,
             LevelRepository levelRepository,
@@ -25,22 +26,22 @@ public class IfoodCommand extends AbstractTrabalhoCommand {
 
     @Override
     public String name() {
-        return ".ifood";
+        return ".garçom";
     }
 
     @Override
     protected Long minXp() {
-        return 10L;
+        return 16L;
     }
 
     @Override
     protected int ganhoMin() {
-        return 7;
+        return 12;
     }
 
     @Override
     protected int ganhoMax() {
-        return 10;
+        return 24;
     }
 
     @Override
@@ -50,25 +51,25 @@ public class IfoodCommand extends AbstractTrabalhoCommand {
 
     @Override
     protected int levelMin() {
-        return 0;
+        return 1;
     }
 
     @Override
     protected String descricaoTrabalho() {
         return """
-                Trabalho: Entregas iFood 🚲
+                Trabalho: Garcom 🍽️
                 Ganho: R$%.2f
-                Total de entregas: %d
+                Total de atendimentos: %d
                 """;
     }
 
     @Override
     protected long incrementarEObterTotal(Job job) {
-        if (job.getTotalIfood() == null) {
-            job.setTotalIfood(0L);
+        if (job.getTotalGarcom() == null) {
+            job.setTotalGarcom(0L);
         }
-        job.setTotalIfood(job.getTotalIfood() + 1);
+        job.setTotalGarcom(job.getTotalGarcom() + 1);
         jobRepository.save(job);
-        return job.getTotalIfood();
+        return job.getTotalGarcom();
     }
 }

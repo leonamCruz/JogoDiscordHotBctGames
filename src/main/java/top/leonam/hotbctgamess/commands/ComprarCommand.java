@@ -12,6 +12,7 @@ import top.leonam.hotbctgamess.model.enums.StoreProduct;
 import top.leonam.hotbctgamess.repository.EconomyRepository;
 import top.leonam.hotbctgamess.repository.PlayerRepository;
 import top.leonam.hotbctgamess.repository.ProductRepository;
+import top.leonam.hotbctgamess.service.CacheService;
 import top.leonam.hotbctgamess.service.TaxService;
 
 import java.awt.*;
@@ -26,17 +27,20 @@ public class ComprarCommand implements Command {
     private final PlayerRepository playerRepository;
     private final ProductRepository productRepository;
     private final TaxService taxService;
+    private final CacheService cacheService;
 
     public ComprarCommand(
             EconomyRepository economyRepository,
             PlayerRepository playerRepository,
             ProductRepository productRepository,
-            TaxService taxService
+            TaxService taxService,
+            CacheService cacheService
     ) {
         this.economyRepository = economyRepository;
         this.playerRepository = playerRepository;
         this.productRepository = productRepository;
         this.taxService = taxService;
+        this.cacheService = cacheService;
     }
 
     @Override
@@ -123,6 +127,7 @@ public class ComprarCommand implements Command {
 
         economy.setMoney(money.subtract(storeProduct.getPrice()));
         economyRepository.save(economy);
+        cacheService.evictPlayer(discordId);
 
         return new EmbedBuilder()
                 .setTitle("Compra concluida")

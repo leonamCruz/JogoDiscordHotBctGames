@@ -8,9 +8,9 @@ import top.leonam.hotbctgamess.service.CacheService;
 import java.util.Random;
 
 @Service
-public class CcCommand extends AbstractCrimeCommand {
+public class BetCommand extends AbstractCrimeCommand {
 
-    public CcCommand(
+    public BetCommand(
             JobRepository jobRepository,
             EconomyRepository economyRepository,
             LevelRepository levelRepository,
@@ -24,20 +24,20 @@ public class CcCommand extends AbstractCrimeCommand {
 
     @Override
     public String name() {
-        return ".cc";
+        return ".bet";
     }
 
-    @Override protected int ganhoMin() { return 150; }
-    @Override protected int ganhoMax() { return 1000; }
+    @Override protected int ganhoMin() { return 500; }
+    @Override protected int ganhoMax() { return 1500; }
     @Override protected int cooldown() { return 3; }
-    @Override protected int levelMin() { return 1; }
-    @Override protected Long minXp() { return 25L; }
-    @Override protected int chancePrisao() { return 10; }
+    @Override protected int levelMin() { return 3; }
+    @Override protected Long minXp() { return 24L; }
+    @Override protected int chancePrisao() { return 16; }
 
     @Override
     protected String descricaoTrabalho() {
         return """
-                Crime: CC 💳
+                Crime: Bet clandestina 🎲
                 Lucro: R$%.2f
                 Total de crimes: %d
                 """;
@@ -45,16 +45,16 @@ public class CcCommand extends AbstractCrimeCommand {
 
     @Override
     protected String textoPrisao() {
-        return "🚔 🚨 A polícia rastreou a operação. Você foi em cana.";
+        return "A casa caiu. Operacao de bet foi fechada.";
     }
 
     @Override
     protected long incrementarEObterTotal(Job job) {
-        if (job.getTotalCc() == null) {
-            job.setTotalCc(0L);
+        if (job.getTotalBet() == null) {
+            job.setTotalBet(0L);
         }
-        job.setTotalCc(job.getTotalCc() + 1);
+        job.setTotalBet(job.getTotalBet() + 1);
         jobRepository.save(job);
-        return job.getTotalCc();
+        return job.getTotalBet();
     }
 }

@@ -16,7 +16,14 @@ public class CacheConfig {
         CaffeineCacheManager manager = new CaffeineCacheManager(
                 "crimes",
                 "crimeByName",
-                "help"
+                "help",
+                "economyByDiscordId",
+                "jobByDiscordId",
+                "levelByDiscordId",
+                "playerByDiscordId",
+                "productsByDiscordId",
+                "productCountByDiscordId",
+                "taxActions"
         );
 
         manager.setCaffeine(

@@ -8,9 +8,9 @@ import top.leonam.hotbctgamess.service.CacheService;
 import java.util.Random;
 
 @Service
-public class CcCommand extends AbstractCrimeCommand {
+public class HackearCommand extends AbstractCrimeCommand {
 
-    public CcCommand(
+    public HackearCommand(
             JobRepository jobRepository,
             EconomyRepository economyRepository,
             LevelRepository levelRepository,
@@ -24,20 +24,20 @@ public class CcCommand extends AbstractCrimeCommand {
 
     @Override
     public String name() {
-        return ".cc";
+        return ".hackear";
     }
 
-    @Override protected int ganhoMin() { return 150; }
-    @Override protected int ganhoMax() { return 1000; }
+    @Override protected int ganhoMin() { return 800; }
+    @Override protected int ganhoMax() { return 2200; }
     @Override protected int cooldown() { return 3; }
-    @Override protected int levelMin() { return 1; }
-    @Override protected Long minXp() { return 25L; }
-    @Override protected int chancePrisao() { return 10; }
+    @Override protected int levelMin() { return 4; }
+    @Override protected Long minXp() { return 30L; }
+    @Override protected int chancePrisao() { return 18; }
 
     @Override
     protected String descricaoTrabalho() {
         return """
-                Crime: CC 💳
+                Crime: Hackear 💻
                 Lucro: R$%.2f
                 Total de crimes: %d
                 """;
@@ -45,16 +45,16 @@ public class CcCommand extends AbstractCrimeCommand {
 
     @Override
     protected String textoPrisao() {
-        return "🚔 🚨 A polícia rastreou a operação. Você foi em cana.";
+        return "O rastreio foi rapido. Hack falhou e voce foi preso.";
     }
 
     @Override
     protected long incrementarEObterTotal(Job job) {
-        if (job.getTotalCc() == null) {
-            job.setTotalCc(0L);
+        if (job.getTotalHackear() == null) {
+            job.setTotalHackear(0L);
         }
-        job.setTotalCc(job.getTotalCc() + 1);
+        job.setTotalHackear(job.getTotalHackear() + 1);
         jobRepository.save(job);
-        return job.getTotalCc();
+        return job.getTotalHackear();
     }
 }

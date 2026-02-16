@@ -1,7 +1,9 @@
 package top.leonam.hotbctgamess.commands;
 
 import org.springframework.stereotype.Service;
+import top.leonam.hotbctgamess.model.entity.Job;
 import top.leonam.hotbctgamess.repository.*;
+import top.leonam.hotbctgamess.service.CacheService;
 
 import java.util.Random;
 
@@ -20,9 +22,10 @@ public class TraficoCommand extends AbstractCrimeCommand {
             LevelRepository levelRepository,
             PrisonRepository prisonRepository,
             UniversityRepository universityRepository,
+            CacheService cacheService,
             Random random
     ) {
-        super(jobRepository, economyRepository, levelRepository, prisonRepository,universityRepository, random);
+        super(jobRepository, economyRepository, levelRepository, prisonRepository, universityRepository, cacheService, random);
     }
 
     @Override
@@ -72,5 +75,15 @@ public class TraficoCommand extends AbstractCrimeCommand {
     @Override
     public String name() {
         return ".trafico";
+    }
+
+    @Override
+    protected long incrementarEObterTotal(Job job) {
+        if (job.getTotalTrafico() == null) {
+            job.setTotalTrafico(0L);
+        }
+        job.setTotalTrafico(job.getTotalTrafico() + 1);
+        jobRepository.save(job);
+        return job.getTotalTrafico();
     }
 }

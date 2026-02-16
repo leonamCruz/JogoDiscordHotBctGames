@@ -36,5 +36,23 @@ public class Economy {
         if (energy == null) {
             energy = 0L;
         }
+        sanitize();
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        sanitize();
+    }
+
+    private void sanitize() {
+        if (money.compareTo(BigDecimal.ZERO) < 0) {
+            money = BigDecimal.ZERO;
+        }
+        if (btc.compareTo(BigDecimal.ZERO) < 0) {
+            btc = BigDecimal.ZERO;
+        }
+        if (energy < 0) {
+            energy = 0L;
+        }
     }
 }

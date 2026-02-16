@@ -8,9 +8,9 @@ import top.leonam.hotbctgamess.service.CacheService;
 import java.util.Random;
 
 @Service
-public class CcCommand extends AbstractCrimeCommand {
+public class LaranjaCommand extends AbstractCrimeCommand {
 
-    public CcCommand(
+    public LaranjaCommand(
             JobRepository jobRepository,
             EconomyRepository economyRepository,
             LevelRepository levelRepository,
@@ -24,20 +24,20 @@ public class CcCommand extends AbstractCrimeCommand {
 
     @Override
     public String name() {
-        return ".cc";
+        return ".laranja";
     }
 
-    @Override protected int ganhoMin() { return 150; }
-    @Override protected int ganhoMax() { return 1000; }
+    @Override protected int ganhoMin() { return 300; }
+    @Override protected int ganhoMax() { return 900; }
     @Override protected int cooldown() { return 3; }
-    @Override protected int levelMin() { return 1; }
-    @Override protected Long minXp() { return 25L; }
-    @Override protected int chancePrisao() { return 10; }
+    @Override protected int levelMin() { return 2; }
+    @Override protected Long minXp() { return 22L; }
+    @Override protected int chancePrisao() { return 12; }
 
     @Override
     protected String descricaoTrabalho() {
         return """
-                Crime: CC 💳
+                Crime: Conta laranja 🥕
                 Lucro: R$%.2f
                 Total de crimes: %d
                 """;
@@ -45,16 +45,16 @@ public class CcCommand extends AbstractCrimeCommand {
 
     @Override
     protected String textoPrisao() {
-        return "🚔 🚨 A polícia rastreou a operação. Você foi em cana.";
+        return "O banco desconfiou. Conta laranja rastreada.";
     }
 
     @Override
     protected long incrementarEObterTotal(Job job) {
-        if (job.getTotalCc() == null) {
-            job.setTotalCc(0L);
+        if (job.getTotalLaranja() == null) {
+            job.setTotalLaranja(0L);
         }
-        job.setTotalCc(job.getTotalCc() + 1);
+        job.setTotalLaranja(job.getTotalLaranja() + 1);
         jobRepository.save(job);
-        return job.getTotalCc();
+        return job.getTotalLaranja();
     }
 }

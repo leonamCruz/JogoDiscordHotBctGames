@@ -24,7 +24,9 @@ import top.leonam.hotbctgamess.repository.PrisonRepository;
 import top.leonam.hotbctgamess.repository.ProductRepository;
 import top.leonam.hotbctgamess.service.BdService;
 import top.leonam.hotbctgamess.service.BtcMarketService;
+import top.leonam.hotbctgamess.service.CacheService;
 import top.leonam.hotbctgamess.service.EnergyService;
+import top.leonam.hotbctgamess.service.TaxActionService;
 import top.leonam.hotbctgamess.service.TaxService;
 import top.leonam.hotbctgamess.util.MiningCalculator;
 
@@ -50,6 +52,8 @@ public class JdaListener extends ListenerAdapter {
     private ProductRepository productRepository;
     private BtcMarketService marketService;
     private TaxService taxService;
+    private TaxActionService taxActionService;
+    private CacheService cacheService;
     private Random random;
 
     @Transactional
@@ -79,6 +83,7 @@ public class JdaListener extends ListenerAdapter {
                 String rawContent = event.getMessage().getContentRaw();
                 ActionRow row = buildTaxActionRow(command.name(), rawContent, event.getAuthor().getIdLong());
                 if (row != null) {
+                    storeTaxAction(command.name(), rawContent, event.getAuthor().getIdLong());
                     event.getMessage()
                             .replyEmbeds(embed)
                             .addComponents(row)
@@ -160,12 +165,25 @@ public class JdaListener extends ListenerAdapter {
             String type = parts[1];
             String mode = parts[2];
             boolean evade = "evade".equals(mode);
+            TaxActionService.TaxAction actionData = taxActionService.consume(ownerId, type);
+            if (actionData == null) {
+                respondAndClearButtons(event, buildSimpleError(event, "Acao expirada"));
+                return;
+            }
             if ("buy".equals(type)) {
+                if (!actionData.payload().equals(parts[4])) {
+                    respondAndClearButtons(event, buildSimpleError(event, "Acao invalida"));
+                    return;
+                }
                 int storeId = parseInt(parts[4]);
                 if (storeId > 0) {
                     handleTaxBuy(event, storeId, evade);
                 }
             } else if ("sell".equals(type)) {
+                if (!actionData.payload().equals(parts[4])) {
+                    respondAndClearButtons(event, buildSimpleError(event, "Acao invalida"));
+                    return;
+                }
                 BigDecimal amount = parseDecimal(parts[4]);
                 if (amount != null) {
                     handleTaxSell(event, amount, evade);
@@ -226,6 +244,7 @@ public class JdaListener extends ListenerAdapter {
         }
 
         String infoExtra = result.dailyPaidNow() ? "kWh diario incluido. ✅" : "kWh extra adicionado. ⚡";
+        cacheService.evictPlayer(discordId);
         respondAndClearButtons(event, new EmbedBuilder()
                 .setTitle("Energia carregada")
                 .setDescription("""
@@ -265,6 +284,7 @@ public class JdaListener extends ListenerAdapter {
             long energiaGato = EnergyService.EXTRA_ENERGY_PACK * 2;
             economy.setEnergy((economy.getEnergy() == null ? 0L : economy.getEnergy()) + energiaGato);
             economyRepository.save(economy);
+            cacheService.evictPlayer(discordId);
 
             respondAndClearButtons(event, new EmbedBuilder()
                     .setTitle("Gato ligado com sucesso 🐱")
@@ -285,6 +305,7 @@ public class JdaListener extends ListenerAdapter {
         if (toRemove > 0) {
             productRepository.deleteAll(asicProducts.subList(0, toRemove));
         }
+        cacheService.evictPlayer(discordId);
 
         respondAndClearButtons(event, new EmbedBuilder()
                 .setTitle("Gato descoberto 🚨")
@@ -322,6 +343,7 @@ public class JdaListener extends ListenerAdapter {
                 return;
             }
             processPurchase(discordId, storeProduct, total);
+            cacheService.evictPlayer(discordId);
             respondAndClearButtons(event, buildTaxResult(
                     event,
                     "Imposto pago ✅",
@@ -341,6 +363,7 @@ public class JdaListener extends ListenerAdapter {
                 return;
             }
             processPurchase(discordId, storeProduct, totalIfCaught);
+            cacheService.evictPlayer(discordId);
             respondAndClearButtons(event, buildTaxResult(
                     event,
                     "Sonegacao falhou 🚨",
@@ -358,6 +381,7 @@ public class JdaListener extends ListenerAdapter {
             return;
         }
         processPurchase(discordId, storeProduct, price);
+        cacheService.evictPlayer(discordId);
         respondAndClearButtons(event, buildTaxResult(
                 event,
                 "Sonegacao ok 🐱",
@@ -405,6 +429,7 @@ public class JdaListener extends ListenerAdapter {
         economy.setMoney(safeMoney(economy.getMoney()).add(net));
         economyRepository.save(economy);
         marketService.applySell(amount);
+        cacheService.evictPlayer(discordId);
 
         respondAndClearButtons(event, new EmbedBuilder()
                 .setTitle("Venda de BTC")
@@ -452,6 +477,7 @@ public class JdaListener extends ListenerAdapter {
         prison.setLastPrison(null);
         prison.setActive(false);
         prisonRepository.save(prison);
+        cacheService.evictPlayer(discordId);
 
         respondAndClearButtons(event, new EmbedBuilder()
                 .setTitle("Fianca paga ⚖️")
@@ -578,6 +604,21 @@ public class JdaListener extends ListenerAdapter {
             );
         }
         return null;
+    }
+
+    private void storeTaxAction(String commandName, String raw, long authorId) {
+        if (".comprar".equals(commandName)) {
+            Integer storeId = parseStoreId(raw);
+            if (storeId != null) {
+                taxActionService.store(authorId, new TaxActionService.TaxAction("buy", String.valueOf(storeId)));
+            }
+        }
+        if (".venderbtc".equals(commandName)) {
+            String amount = parseAmount(raw);
+            if (amount != null) {
+                taxActionService.store(authorId, new TaxActionService.TaxAction("sell", amount));
+            }
+        }
     }
 
     private Integer parseStoreId(String raw) {

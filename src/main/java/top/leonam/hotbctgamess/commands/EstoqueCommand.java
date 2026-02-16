@@ -9,10 +9,11 @@ import top.leonam.hotbctgamess.repository.UniversityRepository;
 import top.leonam.hotbctgamess.service.CacheService;
 
 import java.util.Random;
-@Service
-public class IfoodCommand extends AbstractTrabalhoCommand {
 
-    public IfoodCommand(
+@Service
+public class EstoqueCommand extends AbstractTrabalhoCommand {
+
+    public EstoqueCommand(
             JobRepository jobRepository,
             EconomyRepository economyRepository,
             LevelRepository levelRepository,
@@ -25,22 +26,22 @@ public class IfoodCommand extends AbstractTrabalhoCommand {
 
     @Override
     public String name() {
-        return ".ifood";
+        return ".estoque";
     }
 
     @Override
     protected Long minXp() {
-        return 10L;
+        return 14L;
     }
 
     @Override
     protected int ganhoMin() {
-        return 7;
+        return 10;
     }
 
     @Override
     protected int ganhoMax() {
-        return 10;
+        return 20;
     }
 
     @Override
@@ -56,19 +57,19 @@ public class IfoodCommand extends AbstractTrabalhoCommand {
     @Override
     protected String descricaoTrabalho() {
         return """
-                Trabalho: Entregas iFood 🚲
+                Trabalho: Estoque 📦
                 Ganho: R$%.2f
-                Total de entregas: %d
+                Total de turnos: %d
                 """;
     }
 
     @Override
     protected long incrementarEObterTotal(Job job) {
-        if (job.getTotalIfood() == null) {
-            job.setTotalIfood(0L);
+        if (job.getTotalEstoque() == null) {
+            job.setTotalEstoque(0L);
         }
-        job.setTotalIfood(job.getTotalIfood() + 1);
+        job.setTotalEstoque(job.getTotalEstoque() + 1);
         jobRepository.save(job);
-        return job.getTotalIfood();
+        return job.getTotalEstoque();
     }
 }

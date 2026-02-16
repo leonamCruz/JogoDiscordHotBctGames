@@ -9,6 +9,7 @@ import top.leonam.hotbctgamess.model.entity.Economy;
 import top.leonam.hotbctgamess.model.entity.Level;
 import top.leonam.hotbctgamess.repository.EconomyRepository;
 import top.leonam.hotbctgamess.repository.LevelRepository;
+import top.leonam.hotbctgamess.service.CacheService;
 import top.leonam.hotbctgamess.service.BtcMarketService;
 import top.leonam.hotbctgamess.service.TaxService;
 
@@ -24,17 +25,20 @@ public class VenderBtcCommand implements Command {
     private final LevelRepository levelRepository;
     private final BtcMarketService marketService;
     private final TaxService taxService;
+    private final CacheService cacheService;
 
     public VenderBtcCommand(
             EconomyRepository economyRepository,
             LevelRepository levelRepository,
             BtcMarketService marketService,
-            TaxService taxService
+            TaxService taxService,
+            CacheService cacheService
     ) {
         this.economyRepository = economyRepository;
         this.levelRepository = levelRepository;
         this.marketService = marketService;
         this.taxService = taxService;
+        this.cacheService = cacheService;
     }
 
     @Override
@@ -120,6 +124,7 @@ public class VenderBtcCommand implements Command {
         economy.setMoney(getMoney(economy).add(gross));
         economyRepository.save(economy);
         marketService.applySell(amount);
+        cacheService.evictPlayer(discordId);
 
         return new EmbedBuilder()
                 .setTitle("Venda concluida")
