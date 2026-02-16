@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import org.springframework.stereotype.Service;
+import top.leonam.hotbctgamess.config.GameBalanceProperties;
 import top.leonam.hotbctgamess.interfaces.Command;
 import top.leonam.hotbctgamess.model.entity.Economy;
 import top.leonam.hotbctgamess.model.entity.Level;
@@ -26,19 +27,22 @@ public class VenderBtcCommand implements Command {
     private final BtcMarketService marketService;
     private final TaxService taxService;
     private final CacheService cacheService;
+    private final GameBalanceProperties.Btc balance;
 
     public VenderBtcCommand(
             EconomyRepository economyRepository,
             LevelRepository levelRepository,
             BtcMarketService marketService,
             TaxService taxService,
-            CacheService cacheService
+            CacheService cacheService,
+            GameBalanceProperties balanceProperties
     ) {
         this.economyRepository = economyRepository;
         this.levelRepository = levelRepository;
         this.marketService = marketService;
         this.taxService = taxService;
         this.cacheService = cacheService;
+        this.balance = balanceProperties.getBtc();
     }
 
     @Override
@@ -67,13 +71,13 @@ public class VenderBtcCommand implements Command {
 
         Long discordId = event.getAuthor().getIdLong();
         Level level = levelRepository.findByPlayer_Identity_DiscordId(discordId);
-        if (level == null || level.getLevel() < 2) {
+        if (level == null || level.getLevel() < balance.getSellLevelMin()) {
             return new EmbedBuilder()
                     .setTitle("Level insuficiente")
                     .setDescription("""
                             Level atual: %d
-                            Level minimo: 2
-                            """.formatted(level == null ? 0L : level.getLevel()))
+                            Level minimo: %d
+                            """.formatted(level == null ? 0L : level.getLevel(), balance.getSellLevelMin()))
                     .setAuthor(event.getAuthor().getEffectiveName())
                     .setThumbnail(event.getAuthor().getEffectiveAvatarUrl())
                     .setTimestamp(Instant.now())
@@ -100,7 +104,7 @@ public class VenderBtcCommand implements Command {
         BigDecimal price = marketService.getCurrentPrice();
         BigDecimal gross = amount.multiply(price);
 
-        if (gross.compareTo(TaxService.TAX_THRESHOLD) > 0) {
+        if (taxService.isTaxable(gross)) {
             BigDecimal tax = taxService.calculateTax(gross);
             BigDecimal total = gross.subtract(tax);
             return new EmbedBuilder()
@@ -109,10 +113,10 @@ public class VenderBtcCommand implements Command {
                             Preco BTC: R$%.2f
                             BTC a vender: %.5f
                             Valor bruto: R$%.2f
-                            Imposto (25%%): R$%.2f
+                            Imposto (%s%%): R$%.2f
                             Valor liquido: R$%.2f
                             Escolha: pagar ou sonegar
-                            """.formatted(price, amount, gross, tax, total))
+                            """.formatted(price, amount, gross, formatPercent(taxService.getRate()), tax, total))
                     .setAuthor(event.getAuthor().getEffectiveName())
                     .setThumbnail(event.getAuthor().getEffectiveAvatarUrl())
                     .setTimestamp(Instant.now())
@@ -156,5 +160,9 @@ public class VenderBtcCommand implements Command {
 
     private BigDecimal getMoney(Economy economy) {
         return economy.getMoney() == null ? BigDecimal.ZERO : economy.getMoney();
+    }
+
+    private String formatPercent(BigDecimal rate) {
+        return rate.multiply(BigDecimal.valueOf(100)).stripTrailingZeros().toPlainString();
     }
 }

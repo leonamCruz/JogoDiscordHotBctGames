@@ -10,7 +10,6 @@ import java.util.Set;
         @Index(name = "idx_player_identity_id", columnList = "identity_id"),
         @Index(name = "idx_player_economy_id", columnList = "economy_id"),
         @Index(name = "idx_player_job_id", columnList = "job_id"),
-        @Index(name = "idx_player_crime_id", columnList = "crime_id"),
         @Index(name = "idx_player_level_id", columnList = "level_id"),
         @Index(name = "idx_player_prison_id", columnList = "prison_id"),
         @Index(name = "idx_player_university_id", columnList = "university_id")

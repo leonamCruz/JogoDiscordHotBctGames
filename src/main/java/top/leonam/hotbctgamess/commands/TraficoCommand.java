@@ -1,6 +1,7 @@
 package top.leonam.hotbctgamess.commands;
 
 import org.springframework.stereotype.Service;
+import top.leonam.hotbctgamess.config.GameBalanceProperties;
 import top.leonam.hotbctgamess.model.entity.Job;
 import top.leonam.hotbctgamess.repository.*;
 import top.leonam.hotbctgamess.service.CacheService;
@@ -10,11 +11,7 @@ import java.util.Random;
 @Service
 public class TraficoCommand extends AbstractCrimeCommand {
 
-    private static final int GANHO_MIN = 2600;
-    private static final int GANHO_MAX = 5500;
-    private static final int CHANCE_PRISAO = 22;
-    private static final int LEVEL_MIN = 5;
-    private static final int COOLDOWN_SECONDS = 10;
+    private final GameBalanceProperties.CrimeItem balance;
 
     public TraficoCommand(
             JobRepository jobRepository,
@@ -23,34 +20,36 @@ public class TraficoCommand extends AbstractCrimeCommand {
             PrisonRepository prisonRepository,
             UniversityRepository universityRepository,
             CacheService cacheService,
+            GameBalanceProperties balanceProperties,
             Random random
     ) {
-        super(jobRepository, economyRepository, levelRepository, prisonRepository, universityRepository, cacheService, random);
+        super(jobRepository, economyRepository, levelRepository, prisonRepository, universityRepository, cacheService, balanceProperties.getWork(), random);
+        this.balance = balanceProperties.getCrime().getTrafico();
     }
 
     @Override
     protected int ganhoMin() {
-        return GANHO_MIN;
+        return balance.getGainMin();
     }
 
     @Override
     protected int ganhoMax() {
-        return GANHO_MAX;
+        return balance.getGainMax();
     }
 
     @Override
     protected int chancePrisao() {
-        return CHANCE_PRISAO;
+        return balance.getPrisonChance();
     }
 
     @Override
     protected int levelMin() {
-        return LEVEL_MIN;
+        return balance.getLevelMin();
     }
 
     @Override
     protected int cooldown() {
-        return 3;
+        return balance.getCooldown();
     }
 
     @Override
@@ -69,7 +68,7 @@ public class TraficoCommand extends AbstractCrimeCommand {
 
     @Override
     protected Long minXp() {
-        return 30L;
+        return balance.getXp();
     }
 
     @Override

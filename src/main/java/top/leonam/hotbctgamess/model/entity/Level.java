@@ -6,6 +6,8 @@ import lombok.Data;
 @Data
 public class Level {
 
+    private static volatile long xpBase = 80L;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
@@ -23,7 +25,13 @@ public class Level {
     }
 
     public long xpParaProximoNivel() {
-        return 80L * level * level;
+        return xpBase * level * level;
+    }
+
+    public static void setXpBase(long xpBase) {
+        if (xpBase > 0) {
+            Level.xpBase = xpBase;
+        }
     }
 
     public void ganharXp(long valor) {

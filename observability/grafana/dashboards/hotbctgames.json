@@ -1,0 +1,126 @@
+{
+  "id": null,
+  "uid": "hotbctgames",
+  "title": "HotbctGames",
+  "tags": ["hotbct", "discord", "game"],
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "10s",
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Comandos por minuto",
+      "gridPos": { "x": 0, "y": 0, "w": 8, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(discord_commands_total[1m])) * 60"
+        }
+      ],
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Cliques de botao por minuto",
+      "gridPos": { "x": 8, "y": 0, "w": 8, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(discord_buttons_total[1m])) * 60"
+        }
+      ],
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Tempo medio do comando (ms)",
+      "gridPos": { "x": 16, "y": 0, "w": 8, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(discord_commands_duration_seconds_sum[5m])) / sum(rate(discord_commands_duration_seconds_count[5m])) * 1000"
+        }
+      ],
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center"
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Comandos por tipo",
+      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 6 },
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (command) (rate(discord_commands_total[5m]))"
+        }
+      ],
+      "options": {
+        "legend": { "displayMode": "table" }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Tempo medio por comando (ms)",
+      "gridPos": { "x": 12, "y": 4, "w": 12, "h": 6 },
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (command) (rate(discord_commands_duration_seconds_sum[5m])) / sum by (command) (rate(discord_commands_duration_seconds_count[5m])) * 1000"
+        }
+      ],
+      "options": {
+        "legend": { "displayMode": "table" }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Heap usada (MB)",
+      "gridPos": { "x": 0, "y": 10, "w": 12, "h": 6 },
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(jvm_memory_used_bytes{area=\"heap\"}) / 1024 / 1024"
+        }
+      ],
+      "options": {
+        "legend": { "displayMode": "table" }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "CPU processo (%)",
+      "gridPos": { "x": 12, "y": 10, "w": 12, "h": 6 },
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "process_cpu_usage * 100"
+        }
+      ],
+      "options": {
+        "legend": { "displayMode": "table" }
+      }
+    }
+  ]
+}

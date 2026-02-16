@@ -1,14 +1,13 @@
 package top.leonam.hotbctgamess.commands;
 
 import jakarta.transaction.Transactional;
-import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import top.leonam.hotbctgamess.interfaces.Command;
 import top.leonam.hotbctgamess.model.entity.Economy;
 import top.leonam.hotbctgamess.model.entity.Job;
 import top.leonam.hotbctgamess.model.entity.Level;
+import top.leonam.hotbctgamess.config.GameBalanceProperties;
 import top.leonam.hotbctgamess.repository.EconomyRepository;
 import top.leonam.hotbctgamess.repository.JobRepository;
 import top.leonam.hotbctgamess.repository.LevelRepository;
@@ -22,7 +21,6 @@ import java.time.LocalDateTime;
 import java.time.Instant;
 import java.util.Random;
 
-@AllArgsConstructor
 public abstract class AbstractTrabalhoCommand implements Command {
 
     protected JobRepository jobRepository;
@@ -30,7 +28,26 @@ public abstract class AbstractTrabalhoCommand implements Command {
     protected LevelRepository levelRepository;
     protected UniversityRepository universityRepository;
     protected CacheService cacheService;
+    protected GameBalanceProperties.Work workBalance;
     protected Random random;
+
+    protected AbstractTrabalhoCommand(
+            JobRepository jobRepository,
+            EconomyRepository economyRepository,
+            LevelRepository levelRepository,
+            UniversityRepository universityRepository,
+            CacheService cacheService,
+            GameBalanceProperties.Work workBalance,
+            Random random
+    ) {
+        this.jobRepository = jobRepository;
+        this.economyRepository = economyRepository;
+        this.levelRepository = levelRepository;
+        this.universityRepository = universityRepository;
+        this.cacheService = cacheService;
+        this.workBalance = workBalance;
+        this.random = random;
+    }
 
     @Transactional
     @Override
@@ -93,8 +110,8 @@ public abstract class AbstractTrabalhoCommand implements Command {
         if(!temFaculdade){
             return BigDecimal.valueOf(random.nextInt(ganhoMin(), ganhoMax()));
         }
-        //aumento de 20%
-        return BigDecimal.valueOf(random.nextInt(ganhoMin(), ganhoMax())).multiply(BigDecimal.valueOf(120));
+        BigDecimal base = BigDecimal.valueOf(random.nextInt(ganhoMin(), ganhoMax()));
+        return base.multiply(BigDecimal.valueOf(workBalance.getFaculdadeMultiplier()));
     }
 
     protected void atualizarEconomia(Long discordId, BigDecimal valor) {

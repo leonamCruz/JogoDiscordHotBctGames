@@ -1,6 +1,7 @@
 package top.leonam.hotbctgamess.service;
 
 import org.springframework.stereotype.Service;
+import top.leonam.hotbctgamess.config.GameBalanceProperties;
 import top.leonam.hotbctgamess.model.entity.Economy;
 import top.leonam.hotbctgamess.model.entity.Product;
 import top.leonam.hotbctgamess.model.enums.StoreProduct;
@@ -14,18 +15,18 @@ import java.util.List;
 @Service
 public class EnergyService {
 
-    public static final BigDecimal DAILY_COST = new BigDecimal("80");
-    public static final long DAILY_ENERGY_BASE = 100L;
-    public static final long EXTRA_ENERGY_PACK = 25L;
-    public static final BigDecimal EXTRA_PACK_BASE_COST = new BigDecimal("40");
-    public static final BigDecimal EXTRA_PACK_ASIC_SURCHARGE = new BigDecimal("20");
-
     private final EconomyRepository economyRepository;
     private final ProductRepository productRepository;
+    private final GameBalanceProperties.Energy balance;
 
-    public EnergyService(EconomyRepository economyRepository, ProductRepository productRepository) {
+    public EnergyService(
+            EconomyRepository economyRepository,
+            ProductRepository productRepository,
+            GameBalanceProperties balanceProperties
+    ) {
         this.economyRepository = economyRepository;
         this.productRepository = productRepository;
+        this.balance = balanceProperties.getEnergy();
     }
 
     public EnergyStatus getStatus(Long discordId) {
@@ -53,8 +54,8 @@ public class EnergyService {
         BigDecimal dailyCost = BigDecimal.ZERO;
         long dailyEnergy = 0L;
         if (!status.alreadyPaid && allowDaily) {
-            dailyCost = DAILY_COST;
-            dailyEnergy = DAILY_ENERGY_BASE + status.dailyBonus;
+            dailyCost = balance.getDailyCost();
+            dailyEnergy = balance.getDailyBase() + status.dailyBonus;
         }
 
         BigDecimal extraCost = getExtraPackCost(status.asicCount)
@@ -65,7 +66,7 @@ public class EnergyService {
             return EnergyPurchaseResult.insufficient(totalCost, status.currentEnergy);
         }
 
-        long energyToAdd = dailyEnergy + (EXTRA_ENERGY_PACK * extraPacks);
+        long energyToAdd = dailyEnergy + (balance.getExtraPack() * extraPacks);
         Economy economy = status.economy;
         economy.setMoney(status.money.subtract(totalCost));
         economy.setEnergy(status.currentEnergy + energyToAdd);
@@ -79,7 +80,28 @@ public class EnergyService {
     }
 
     public BigDecimal getExtraPackCost(long asicCount) {
-        return EXTRA_PACK_BASE_COST.add(EXTRA_PACK_ASIC_SURCHARGE.multiply(BigDecimal.valueOf(asicCount)));
+        return balance.getExtraPackBaseCost()
+                .add(balance.getExtraPackAsicSurcharge().multiply(BigDecimal.valueOf(asicCount)));
+    }
+
+    public long getExtraPackSize() {
+        return balance.getExtraPack();
+    }
+
+    public long getDailyBaseEnergy() {
+        return balance.getDailyBase();
+    }
+
+    public double getGatoSuccessChance() {
+        return balance.getGatoSuccessChance();
+    }
+
+    public int getGatoEnergyPacks() {
+        return balance.getGatoEnergyPacks();
+    }
+
+    public double getGatoLossPercent() {
+        return balance.getGatoLossPercent();
     }
 
     private long getDailyEnergyBonus(List<Product> products) {

@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import org.springframework.stereotype.Service;
+import top.leonam.hotbctgamess.config.GameBalanceProperties;
 import top.leonam.hotbctgamess.interfaces.Command;
 import top.leonam.hotbctgamess.model.entity.Economy;
 import top.leonam.hotbctgamess.model.entity.Product;
@@ -25,9 +26,7 @@ import java.util.List;
 @Service
 public class MinerarCommand implements Command {
 
-    private static final long MIN_ENERGY_PER_ROUND = 1L;
-    private static final long MINING_XP = 2L;
-    private static final long MINING_LEVEL_MIN = 2L;
+    private final GameBalanceProperties.Mining balance;
 
     private final EconomyRepository economyRepository;
     private final LevelRepository levelRepository;
@@ -40,13 +39,15 @@ public class MinerarCommand implements Command {
             LevelRepository levelRepository,
             ProductRepository productRepository,
             BtcMarketService marketService,
-            CacheService cacheService
+            CacheService cacheService,
+            GameBalanceProperties balanceProperties
     ) {
         this.economyRepository = economyRepository;
         this.levelRepository = levelRepository;
         this.productRepository = productRepository;
         this.marketService = marketService;
         this.cacheService = cacheService;
+        this.balance = balanceProperties.getMining();
     }
 
     @Override
@@ -60,13 +61,13 @@ public class MinerarCommand implements Command {
         Long discordId = event.getAuthor().getIdLong();
         Economy economy = economyRepository.findByPlayer_Identity_DiscordId(discordId);
         Level level = levelRepository.findByPlayer_Identity_DiscordId(discordId);
-        if (level == null || level.getLevel() < MINING_LEVEL_MIN) {
+        if (level == null || level.getLevel() < balance.getLevelMin()) {
             return new EmbedBuilder()
                     .setTitle("Level insuficiente")
                     .setDescription("""
                             Level atual: %d
                             Level minimo: %d
-                            """.formatted(level == null ? 0L : level.getLevel(), MINING_LEVEL_MIN))
+                            """.formatted(level == null ? 0L : level.getLevel(), balance.getLevelMin()))
                     .setAuthor(event.getAuthor().getEffectiveName())
                     .setThumbnail(event.getAuthor().getEffectiveAvatarUrl())
                     .setTimestamp(Instant.now())
@@ -106,7 +107,7 @@ public class MinerarCommand implements Command {
         }
 
         long energy = getEnergy(economy);
-        long energyPerRound = Math.max(MIN_ENERGY_PER_ROUND, totals.energyPerRound());
+        long energyPerRound = Math.max(balance.getMinEnergyPerRound(), totals.energyPerRound());
         if (energy < energyPerRound) {
             return new EmbedBuilder()
                     .setTitle("Sem energia suficiente")
@@ -158,7 +159,7 @@ public class MinerarCommand implements Command {
         if (level == null) {
             return;
         }
-        level.ganharXp(MINING_XP);
+        level.ganharXp(balance.getXp());
         levelRepository.save(level);
     }
 }

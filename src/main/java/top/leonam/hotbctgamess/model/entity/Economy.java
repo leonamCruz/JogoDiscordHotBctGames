@@ -18,7 +18,7 @@ public class Economy {
     @OneToOne(mappedBy = "economy")
     private Player player;
 
-    @Column(precision = 20, scale = 2)
+    @Column(precision = 8, scale = 2)
     private BigDecimal money;
     @Column(precision = 20, scale = 10)
     private BigDecimal btc;

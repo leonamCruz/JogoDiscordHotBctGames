@@ -21,6 +21,12 @@ public class University {
     @Column
     private LocalDateTime quandoConsegui;
 
+    @Column
+    private Boolean ultimoResultadoSucesso;
+
+    @Column
+    private LocalDateTime ultimoResultadoEm;
+
     @OneToOne(mappedBy = "university")
     private Player player;
 

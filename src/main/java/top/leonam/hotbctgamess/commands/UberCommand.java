@@ -1,6 +1,7 @@
 package top.leonam.hotbctgamess.commands;
 
 import org.springframework.stereotype.Service;
+import top.leonam.hotbctgamess.config.GameBalanceProperties;
 import top.leonam.hotbctgamess.model.entity.Job;
 import top.leonam.hotbctgamess.repository.EconomyRepository;
 import top.leonam.hotbctgamess.repository.JobRepository;
@@ -13,15 +14,19 @@ import java.util.Random;
 @Service
 public class UberCommand extends AbstractTrabalhoCommand {
 
+    private final GameBalanceProperties.WorkItem balance;
+
     public UberCommand(
             JobRepository jobRepository,
             EconomyRepository economyRepository,
             LevelRepository levelRepository,
             UniversityRepository universityRepository,
             CacheService cacheService,
+            GameBalanceProperties balanceProperties,
             Random random
     ) {
-        super(jobRepository, economyRepository, levelRepository, universityRepository, cacheService, random);
+        super(jobRepository, economyRepository, levelRepository, universityRepository, cacheService, balanceProperties.getWork(), random);
+        this.balance = balanceProperties.getWork().getUber();
     }
 
     @Override
@@ -31,27 +36,27 @@ public class UberCommand extends AbstractTrabalhoCommand {
 
     @Override
     protected Long minXp() {
-        return 20L;
+        return balance.getXp();
     }
 
     @Override
     protected int ganhoMin() {
-        return 12;
+        return balance.getGainMin();
     }
 
     @Override
     protected int ganhoMax() {
-        return 20;
+        return balance.getGainMax();
     }
 
     @Override
     protected int cooldown() {
-        return 3;
+        return balance.getCooldown();
     }
 
     @Override
     protected int levelMin() {
-        return 3;
+        return balance.getLevelMin();
     }
 
     @Override

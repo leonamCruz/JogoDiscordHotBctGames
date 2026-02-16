@@ -82,7 +82,7 @@ public class ComprarCommand implements Command {
         Economy economy = economyRepository.findByPlayer_Identity_DiscordId(discordId);
         BigDecimal money = getMoney(economy);
 
-        if (storeProduct.getPrice().compareTo(TaxService.TAX_THRESHOLD) > 0) {
+        if (taxService.isTaxable(storeProduct.getPrice())) {
             BigDecimal tax = taxService.calculateTax(storeProduct.getPrice());
             BigDecimal total = storeProduct.getPrice().add(tax);
             return new EmbedBuilder()
@@ -90,10 +90,16 @@ public class ComprarCommand implements Command {
                     .setDescription("""
                             Produto: %s
                             Preco: R$%.2f
-                            Imposto (25%%): R$%.2f
+                            Imposto (%s%%): R$%.2f
                             Total: R$%.2f
                             Escolha: pagar ou sonegar
-                            """.formatted(storeProduct.getName(), storeProduct.getPrice(), tax, total))
+                            """.formatted(
+                                    storeProduct.getName(),
+                                    storeProduct.getPrice(),
+                                    formatPercent(taxService.getRate()),
+                                    tax,
+                                    total
+                            ))
                     .setAuthor(event.getAuthor().getEffectiveName())
                     .setThumbnail(event.getAuthor().getEffectiveAvatarUrl())
                     .setTimestamp(Instant.now())
@@ -159,5 +165,9 @@ public class ComprarCommand implements Command {
 
     private BigDecimal getMoney(Economy economy) {
         return economy.getMoney() == null ? BigDecimal.ZERO : economy.getMoney();
+    }
+
+    private String formatPercent(BigDecimal rate) {
+        return rate.multiply(BigDecimal.valueOf(100)).stripTrailingZeros().toPlainString();
     }
 }

@@ -2,6 +2,8 @@ package top.leonam.hotbctgamess.model.enums;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Map;
 
 public enum StoreProduct {
     GPU_GTX_1060(
@@ -103,6 +105,8 @@ public enum StoreProduct {
     private final long energyCostBonus;
     private final long dailyEnergyBonus;
 
+    private static volatile Map<Integer, StoreOverride> overrides = Collections.emptyMap();
+
     StoreProduct(
             int id,
             String name,
@@ -134,24 +138,35 @@ public enum StoreProduct {
     }
 
     public BigDecimal getPrice() {
-        return price;
+        StoreOverride override = getOverride();
+        return override != null && override.price() != null ? override.price() : price;
     }
 
     public BigDecimal getBtcPerMineBonus() {
-        return btcPerMineBonus;
+        StoreOverride override = getOverride();
+        return override != null && override.btcPerMineBonus() != null ? override.btcPerMineBonus() : btcPerMineBonus;
     }
 
     public long getEnergyCostBonus() {
-        return energyCostBonus;
+        StoreOverride override = getOverride();
+        return override != null && override.energyCostBonus() != null ? override.energyCostBonus() : energyCostBonus;
     }
 
     public long getDailyEnergyBonus() {
-        return dailyEnergyBonus;
+        StoreOverride override = getOverride();
+        return override != null && override.dailyEnergyBonus() != null ? override.dailyEnergyBonus() : dailyEnergyBonus;
     }
 
     public boolean isAsic() {
         return switch (this) {
             case ASIC_S9, ASIC_S17, ASIC_S19 -> true;
+            default -> false;
+        };
+    }
+
+    public boolean isGpu() {
+        return switch (this) {
+            case GPU_GTX_1060, GPU_RX_580, GPU_RTX_2060 -> true;
             default -> false;
         };
     }
@@ -163,10 +178,19 @@ public enum StoreProduct {
                 .orElse(null);
     }
 
+    public static void setOverrides(Map<Integer, StoreOverride> overrides) {
+        StoreProduct.overrides = overrides == null ? Collections.emptyMap() : overrides;
+    }
+
+    private StoreOverride getOverride() {
+        return overrides.get(id);
+    }
+
     public String toDisplayLine() {
-        String energyCostText = energyCostBonus == 0
+        long energyCost = getEnergyCostBonus();
+        String energyCostText = energyCost == 0
                 ? "0"
-                : (energyCostBonus > 0 ? "+" + energyCostBonus : String.valueOf(energyCostBonus));
+                : (energyCost > 0 ? "+" + energyCost : String.valueOf(energyCost));
         return """
                 %d - %s
                 Preco: R$%.2f
@@ -174,6 +198,22 @@ public enum StoreProduct {
                 BTC/rodada: +%.5f
                 kWh/rodada: %s
                 kWh/dia: +%d
-                """.formatted(id, name, price, description, btcPerMineBonus, energyCostText, dailyEnergyBonus).trim();
+                """.formatted(
+                id,
+                getName(),
+                getPrice(),
+                getDescription(),
+                getBtcPerMineBonus(),
+                energyCostText,
+                getDailyEnergyBonus()
+        ).trim();
+    }
+
+    public record StoreOverride(
+            BigDecimal price,
+            BigDecimal btcPerMineBonus,
+            Long energyCostBonus,
+            Long dailyEnergyBonus
+    ) {
     }
 }

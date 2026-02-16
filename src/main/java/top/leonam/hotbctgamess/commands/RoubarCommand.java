@@ -5,6 +5,7 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import org.springframework.stereotype.Service;
+import top.leonam.hotbctgamess.config.GameBalanceProperties;
 import top.leonam.hotbctgamess.interfaces.Command;
 import top.leonam.hotbctgamess.model.entity.Economy;
 import top.leonam.hotbctgamess.model.entity.Job;
@@ -26,9 +27,7 @@ import java.util.Random;
 @Service
 public class RoubarCommand implements Command {
 
-    private static final int DAILY_LIMIT = 3;
-    private static final int PRISON_CHANCE = 15;
-    private static final long XP_PENALTY = 15L;
+    private final GameBalanceProperties.Roubo balance;
 
     private final JobRepository jobRepository;
     private final EconomyRepository economyRepository;
@@ -43,6 +42,7 @@ public class RoubarCommand implements Command {
             LevelRepository levelRepository,
             PrisonRepository prisonRepository,
             CacheService cacheService,
+            GameBalanceProperties balanceProperties,
             Random random
     ) {
         this.jobRepository = jobRepository;
@@ -50,6 +50,7 @@ public class RoubarCommand implements Command {
         this.levelRepository = levelRepository;
         this.prisonRepository = prisonRepository;
         this.cacheService = cacheService;
+        this.balance = balanceProperties.getRoubo();
         this.random = random;
     }
 
@@ -102,13 +103,13 @@ public class RoubarCommand implements Command {
             job.setRobberiesToday(0L);
         }
 
-        if (job.getRobberiesToday() >= DAILY_LIMIT) {
+        if (job.getRobberiesToday() >= balance.getDailyLimit()) {
             return new EmbedBuilder()
                     .setTitle("Limite diario atingido ⏳")
                     .setDescription("""
                             Limite: %d roubos por dia
                             Status: volte amanha
-                            """.formatted(DAILY_LIMIT))
+                            """.formatted(balance.getDailyLimit()))
                     .setAuthor(event.getAuthor().getEffectiveName())
                     .setThumbnail(event.getAuthor().getEffectiveAvatarUrl())
                     .setTimestamp(Instant.now())
@@ -123,7 +124,7 @@ public class RoubarCommand implements Command {
         job.setTotalRoubar(job.getTotalRoubar() + 1);
         jobRepository.save(job);
 
-        if (random.nextInt(100) < PRISON_CHANCE) {
+        if (random.nextInt(100) < balance.getPrisonChance()) {
             return aplicarPrisao(event, discordId);
         }
 
@@ -145,7 +146,7 @@ public class RoubarCommand implements Command {
         }
 
         BigDecimal targetMoney = safeMoney(targetEconomy.getMoney());
-        int percent = 5 + random.nextInt(16);
+        int percent = randomPercent(balance.getMinPercent(), balance.getMaxPercent());
         BigDecimal stolen = targetMoney.multiply(BigDecimal.valueOf(percent))
                 .divide(BigDecimal.valueOf(100), RoundingMode.HALF_UP);
 
@@ -169,7 +170,7 @@ public class RoubarCommand implements Command {
                         percent,
                         stolen,
                         job.getRobberiesToday(),
-                        DAILY_LIMIT,
+                        balance.getDailyLimit(),
                         job.getTotalRoubar()
                 ))
                 .setAuthor(event.getAuthor().getEffectiveName())
@@ -184,12 +185,12 @@ public class RoubarCommand implements Command {
         Level level = levelRepository.findByPlayer_Identity_DiscordId(discordId);
 
         BigDecimal money = safeMoney(economy.getMoney());
-        BigDecimal loss = money.multiply(new BigDecimal("0.50"));
+        BigDecimal loss = money.multiply(BigDecimal.valueOf(balance.getMoneyPenaltyRate()));
         economy.setMoney(money.subtract(loss));
         economyRepository.save(economy);
 
         if (level != null) {
-            level.perderXp(XP_PENALTY);
+            level.perderXp(balance.getXpPenalty());
             levelRepository.save(level);
         }
 
@@ -211,12 +212,19 @@ public class RoubarCommand implements Command {
                         Penalidade: -%d XP
                         Multa: R$%.2f
                         Dica: pague a fiança
-                        """.formatted(XP_PENALTY, loss))
+                        """.formatted(balance.getXpPenalty(), loss))
                 .setAuthor(event.getAuthor().getEffectiveName())
                 .setThumbnail(event.getAuthor().getEffectiveAvatarUrl())
                 .setTimestamp(Instant.now())
                 .setColor(Color.DARK_GRAY)
                 .setFooter("HotBctsGames");
+    }
+
+    private int randomPercent(int min, int max) {
+        if (max <= min) {
+            return min;
+        }
+        return min + random.nextInt((max - min) + 1);
     }
 
     private BigDecimal safeMoney(BigDecimal value) {

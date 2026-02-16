@@ -11,7 +11,9 @@ FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
 COPY --from=build /app/target/*.jar app.jar
+COPY scripts/wait-for-mariadb.sh /app/wait-for-mariadb.sh
+RUN chmod +x /app/wait-for-mariadb.sh
 
 USER nobody
 
-ENTRYPOINT ["java", "-XX:MaxRAM0Percentage=90.0", "-jar", "app.jar"]
+ENTRYPOINT ["/app/wait-for-mariadb.sh", "java", "-XX:MaxRAMPercentage=90.0", "-jar", "app.jar"]

@@ -11,8 +11,6 @@ import top.leonam.hotbctgamess.service.CacheService;
 import top.leonam.hotbctgamess.service.EnergyService;
 
 import java.awt.*;
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.time.Instant;
 
 @Service
@@ -55,7 +53,7 @@ public class EnergiaCommand implements Command {
                             Status: Energia diaria paga ✅
                             kWh atual: %d ⚡
                             Dica: use .energia <packs> para comprar energia extra (+%d kWh por pack)
-                            """.formatted(getEnergy(economy), EnergyService.EXTRA_ENERGY_PACK))
+                            """.formatted(getEnergy(economy), energyService.getExtraPackSize()))
                     .setAuthor(event.getAuthor().getEffectiveName())
                     .setThumbnail(event.getAuthor().getEffectiveAvatarUrl())
                     .setTimestamp(Instant.now())

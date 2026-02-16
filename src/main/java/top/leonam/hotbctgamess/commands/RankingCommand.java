@@ -6,12 +6,11 @@ import org.springframework.stereotype.Service;
 import top.leonam.hotbctgamess.interfaces.Command;
 import top.leonam.hotbctgamess.dto.RankingRow;
 import top.leonam.hotbctgamess.repository.PlayerRepository;
-import top.leonam.hotbctgamess.util.RankingCalculator;
+import top.leonam.hotbctgamess.service.RankingScoreService;
 
 import java.awt.*;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDateTime;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -21,11 +20,14 @@ import java.util.List;
 public class RankingCommand implements Command {
 
     private final PlayerRepository playerRepository;
+    private final RankingScoreService rankingScoreService;
 
     public RankingCommand(
-            PlayerRepository playerRepository
+            PlayerRepository playerRepository,
+            RankingScoreService rankingScoreService
     ) {
         this.playerRepository = playerRepository;
+        this.rankingScoreService = rankingScoreService;
     }
 
     @Override
@@ -56,7 +58,7 @@ public class RankingCommand implements Command {
             long currentLevel = row.level() == null ? 1L : row.level();
             long products = row.products() == null ? 0L : row.products();
 
-            double score = RankingCalculator.score(money, btc, totalJobs, totalCrimes, products);
+            double score = rankingScoreService.score(money, btc, totalJobs, totalCrimes, products);
             entries.add(new RankingEntry(
                     row.name(),
                     row.discordId(),

@@ -1,6 +1,7 @@
 package top.leonam.hotbctgamess.service;
 
 import org.springframework.stereotype.Service;
+import top.leonam.hotbctgamess.config.GameBalanceProperties;
 import top.leonam.hotbctgamess.model.entity.BtcMarket;
 import top.leonam.hotbctgamess.repository.BtcMarketRepository;
 
@@ -9,15 +10,12 @@ import java.math.BigDecimal;
 @Service
 public class BtcMarketService {
 
-    private static final BigDecimal BASE_PRICE = new BigDecimal("50000");
-    private static final BigDecimal MIN_PRICE = new BigDecimal("500");
-    private static final BigDecimal MINING_INCREASE_PER_BTC = new BigDecimal("10000");
-    private static final BigDecimal SELL_DECREASE_PER_BTC = new BigDecimal("20000");
-
     private final BtcMarketRepository repository;
+    private final GameBalanceProperties.Btc balance;
 
-    public BtcMarketService(BtcMarketRepository repository) {
+    public BtcMarketService(BtcMarketRepository repository, GameBalanceProperties balanceProperties) {
         this.repository = repository;
+        this.balance = balanceProperties.getBtc();
     }
 
     public synchronized BigDecimal getCurrentPrice() {
@@ -29,7 +27,7 @@ public class BtcMarketService {
             return;
         }
         BtcMarket market = getOrCreate();
-        BigDecimal delta = btcMined.multiply(MINING_INCREASE_PER_BTC);
+        BigDecimal delta = btcMined.multiply(balance.getMiningIncreasePerBtc());
         market.setPrice(market.getPrice().add(delta));
         repository.save(market);
     }
@@ -39,10 +37,10 @@ public class BtcMarketService {
             return;
         }
         BtcMarket market = getOrCreate();
-        BigDecimal delta = btcSold.multiply(SELL_DECREASE_PER_BTC);
+        BigDecimal delta = btcSold.multiply(balance.getSellDecreasePerBtc());
         BigDecimal next = market.getPrice().subtract(delta);
-        if (next.compareTo(MIN_PRICE) < 0) {
-            next = MIN_PRICE;
+        if (next.compareTo(balance.getMinPrice()) < 0) {
+            next = balance.getMinPrice();
         }
         market.setPrice(next);
         repository.save(market);
@@ -52,7 +50,7 @@ public class BtcMarketService {
         return repository.findById(1L).orElseGet(() -> {
             BtcMarket market = new BtcMarket();
             market.setId(1L);
-            market.setPrice(BASE_PRICE);
+            market.setPrice(balance.getBasePrice());
             return repository.save(market);
         });
     }

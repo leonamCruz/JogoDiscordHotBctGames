@@ -3,6 +3,7 @@ package top.leonam.hotbctgamess.service;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import top.leonam.hotbctgamess.model.entity.Identity;
 import top.leonam.hotbctgamess.model.entity.Player;
@@ -22,10 +23,27 @@ public class BdService {
 
         Identity identity = identityRepository
                 .findByDiscordId(discordId)
-                .orElseGet(() -> identityRepository.saveAndFlush(new Identity(name, discordId)));
+                .orElseGet(() -> {
+                    try {
+                        return identityRepository.saveAndFlush(new Identity(name, discordId));
+                    } catch (DataIntegrityViolationException ex) {
+                        return identityRepository.findByDiscordId(discordId).orElse(null);
+                    }
+                });
 
-        playerRepository.findByIdentity_DiscordId(discordId)
-                .orElseGet(() -> playerRepository.saveAndFlush(new Player(identity)));
+        if (identity == null) {
+            return;
+        }
+
+        if (playerRepository.findByIdentity_DiscordId(discordId).isPresent()) {
+            return;
+        }
+
+        try {
+            playerRepository.saveAndFlush(new Player(identity));
+        } catch (DataIntegrityViolationException ex) {
+            // Another concurrent request created the player.
+        }
     }
 
 }

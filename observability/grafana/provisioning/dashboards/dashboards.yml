@@ -1,0 +1,11 @@
+apiVersion: 1
+
+providers:
+  - name: "HotbctGames"
+    orgId: 1
+    folder: "HotbctGames"
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /var/lib/grafana/dashboards

@@ -7,6 +7,7 @@ import top.leonam.hotbctgamess.model.entity.Economy;
 import top.leonam.hotbctgamess.model.entity.Job;
 import top.leonam.hotbctgamess.model.entity.Level;
 import top.leonam.hotbctgamess.model.entity.Prison;
+import top.leonam.hotbctgamess.config.GameBalanceProperties;
 import top.leonam.hotbctgamess.repository.*;
 import top.leonam.hotbctgamess.service.CacheService;
 
@@ -28,9 +29,10 @@ public abstract class AbstractCrimeCommand extends AbstractTrabalhoCommand {
             PrisonRepository prisonRepository,
             UniversityRepository universityRepository,
             CacheService cacheService,
+            GameBalanceProperties.Work workBalance,
             Random random
     ) {
-        super(jobRepository, economyRepository, levelRepository, universityRepository, cacheService, random);
+        super(jobRepository, economyRepository, levelRepository, universityRepository, cacheService, workBalance, random);
         this.prisonRepository = prisonRepository;
     }
 

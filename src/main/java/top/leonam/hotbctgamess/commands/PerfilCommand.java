@@ -14,12 +14,11 @@ import top.leonam.hotbctgamess.repository.JobRepository;
 import top.leonam.hotbctgamess.repository.LevelRepository;
 import top.leonam.hotbctgamess.repository.PlayerRepository;
 import top.leonam.hotbctgamess.repository.ProductRepository;
-import top.leonam.hotbctgamess.util.RankingCalculator;
+import top.leonam.hotbctgamess.service.RankingScoreService;
 
 import java.awt.*;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDateTime;
 import java.time.Instant;
 import java.util.Optional;
 
@@ -31,19 +30,22 @@ public class PerfilCommand implements Command {
     private final LevelRepository levelRepository;
     private final PlayerRepository playerRepository;
     private final ProductRepository productRepository;
+    private final RankingScoreService rankingScoreService;
 
     public PerfilCommand(
             EconomyRepository economyRepository,
             JobRepository jobRepository,
             LevelRepository levelRepository,
             PlayerRepository playerRepository,
-            ProductRepository productRepository
+            ProductRepository productRepository,
+            RankingScoreService rankingScoreService
     ) {
         this.economyRepository = economyRepository;
         this.jobRepository = jobRepository;
         this.levelRepository = levelRepository;
         this.playerRepository = playerRepository;
         this.productRepository = productRepository;
+        this.rankingScoreService = rankingScoreService;
     }
 
     @Override
@@ -92,7 +94,7 @@ public class PerfilCommand implements Command {
         long totalJobs = job == null ? 0L : safeLong(job.getTotalJobs());
         long totalCrimes = job == null ? 0L : safeLong(job.getTotalCrimes());
         long currentLevel = level == null ? 1L : level.getLevel();
-        double score = RankingCalculator.score(money, btc, totalJobs, totalCrimes, products);
+        double score = rankingScoreService.score(money, btc, totalJobs, totalCrimes, products);
         long totalIfood = job == null ? 0L : safeLong(job.getTotalIfood());
         long totalUber = job == null ? 0L : safeLong(job.getTotalUber());
         long totalEstoque = job == null ? 0L : safeLong(job.getTotalEstoque());

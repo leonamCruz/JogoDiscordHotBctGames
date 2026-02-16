@@ -1,6 +1,8 @@
 package top.leonam.hotbctgamess.listener;
 
 import jakarta.transaction.Transactional;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -12,6 +14,7 @@ import net.dv8tion.jda.api.components.buttons.Button;
 import net.dv8tion.jda.api.components.buttons.ButtonStyle;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import org.springframework.stereotype.Component;
+import top.leonam.hotbctgamess.config.GameBalanceProperties;
 import top.leonam.hotbctgamess.interfaces.Command;
 import top.leonam.hotbctgamess.model.entity.Economy;
 import top.leonam.hotbctgamess.model.entity.Player;
@@ -32,8 +35,9 @@ import top.leonam.hotbctgamess.util.MiningCalculator;
 
 import java.awt.*;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
@@ -54,12 +58,14 @@ public class JdaListener extends ListenerAdapter {
     private TaxService taxService;
     private TaxActionService taxActionService;
     private CacheService cacheService;
+    private GameBalanceProperties balanceProperties;
+    private MeterRegistry meterRegistry;
     private Random random;
 
     @Transactional
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
-        //if (event.getAuthor().isBot()) return;
+        if (event.getAuthor().isBot()) return;
 
         String raw = event.getMessage().getContentRaw();
         String commandName = raw.split("\\s+")[0];
@@ -69,7 +75,10 @@ public class JdaListener extends ListenerAdapter {
         if (command != null) {
             identityService.saveIdentityIfNotExists(event);
 
+            Timer.Sample sample = Timer.start(meterRegistry);
             EmbedBuilder message = command.execute(event);
+            meterRegistry.counter("discord.commands.total", "command", command.name()).increment();
+            sample.stop(meterRegistry.timer("discord.commands.duration", "command", command.name()));
             var embed = message.build();
             if (shouldAddEnergyButtons(command, embed.getTitle())) {
                 event.getMessage()
@@ -139,7 +148,7 @@ public class JdaListener extends ListenerAdapter {
                                     """)
                             .setAuthor(event.getUser().getEffectiveName())
                             .setThumbnail(event.getUser().getEffectiveAvatarUrl())
-                            .setTimestamp(LocalDateTime.now())
+                            .setTimestamp(Instant.now())
                             .setColor(Color.ORANGE)
                             .setFooter("HotBctsGames")
                             .build())
@@ -155,6 +164,7 @@ public class JdaListener extends ListenerAdapter {
             } else if ("gato".equals(mode)) {
                 handleGato(event);
             }
+            meterRegistry.counter("discord.buttons.total", "type", "energy", "mode", mode).increment();
             return;
         }
 
@@ -189,11 +199,13 @@ public class JdaListener extends ListenerAdapter {
                     handleTaxSell(event, amount, evade);
                 }
             }
+            meterRegistry.counter("discord.buttons.total", "type", "tax", "mode", mode).increment();
             return;
         }
 
         if ("bail".equals(action)) {
             handleBail(event);
+            meterRegistry.counter("discord.buttons.total", "type", "bail").increment();
         }
     }
 
@@ -211,20 +223,20 @@ public class JdaListener extends ListenerAdapter {
                             """)
                     .setAuthor(event.getUser().getEffectiveName())
                     .setThumbnail(event.getUser().getEffectiveAvatarUrl())
-                    .setTimestamp(LocalDateTime.now())
+                    .setTimestamp(Instant.now())
                     .setColor(Color.ORANGE)
                     .setFooter("HotBctsGames")
                     .build());
             return;
         }
 
-        long energyPerRound = Math.max(1L, totals.energyPerRound());
+        long energyPerRound = Math.max(balanceProperties.getMining().getMinEnergyPerRound(), totals.energyPerRound());
         long energyAfterDaily = status.currentEnergy();
         if (!status.alreadyPaid()) {
-            energyAfterDaily += EnergyService.DAILY_ENERGY_BASE + status.dailyBonus();
+            energyAfterDaily += energyService.getDailyBaseEnergy() + status.dailyBonus();
         }
         long need = Math.max(0L, energyPerRound - energyAfterDaily);
-        int packs = (int) Math.ceil(need / (double) EnergyService.EXTRA_ENERGY_PACK);
+        int packs = (int) Math.ceil(need / (double) energyService.getExtraPackSize());
 
         EnergyService.EnergyPurchaseResult result = energyService.purchaseEnergy(discordId, packs, true);
         if (!result.success()) {
@@ -236,7 +248,7 @@ public class JdaListener extends ListenerAdapter {
                             """.formatted(result.totalCost()))
                     .setAuthor(event.getUser().getEffectiveName())
                     .setThumbnail(event.getUser().getEffectiveAvatarUrl())
-                    .setTimestamp(LocalDateTime.now())
+                    .setTimestamp(Instant.now())
                     .setColor(Color.RED)
                     .setFooter("HotBctsGames")
                     .build());
@@ -255,7 +267,7 @@ public class JdaListener extends ListenerAdapter {
                         """.formatted(result.totalCost(), result.energyAdded(), result.currentEnergy(), infoExtra))
                 .setAuthor(event.getUser().getEffectiveName())
                 .setThumbnail(event.getUser().getEffectiveAvatarUrl())
-                .setTimestamp(LocalDateTime.now())
+                .setTimestamp(Instant.now())
                 .setColor(Color.GREEN)
                 .setFooter("HotBctsGames")
                 .build());
@@ -267,21 +279,35 @@ public class JdaListener extends ListenerAdapter {
         List<Product> products = new ArrayList<>(status.products());
 
         List<Product> asicProducts = new ArrayList<>();
+        List<Product> gpuProducts = new ArrayList<>();
         for (Product product : products) {
             Integer storeId = product.getStoreProductId();
-            if (storeId == null) {
+            if (storeId != null) {
+                StoreProduct storeProduct = StoreProduct.fromId(storeId);
+                if (storeProduct != null) {
+                    if (storeProduct.isAsic()) {
+                        asicProducts.add(product);
+                    } else if (storeProduct.isGpu()) {
+                        gpuProducts.add(product);
+                    }
+                }
                 continue;
             }
-            StoreProduct storeProduct = StoreProduct.fromId(storeId);
-            if (storeProduct != null && storeProduct.isAsic()) {
-                asicProducts.add(product);
+            String name = product.getName();
+            if (name != null) {
+                String upper = name.toUpperCase();
+                if (upper.contains("ASIC")) {
+                    asicProducts.add(product);
+                } else if (upper.contains("GPU")) {
+                    gpuProducts.add(product);
+                }
             }
         }
 
-        boolean sucesso = random.nextInt(100) < 50;
+        boolean sucesso = random.nextDouble() < energyService.getGatoSuccessChance();
         if (sucesso) {
             Economy economy = economyRepository.findByPlayer_Identity_DiscordId(discordId);
-            long energiaGato = EnergyService.EXTRA_ENERGY_PACK * 2;
+            long energiaGato = energyService.getExtraPackSize() * energyService.getGatoEnergyPacks();
             economy.setEnergy((economy.getEnergy() == null ? 0L : economy.getEnergy()) + energiaGato);
             economyRepository.save(economy);
             cacheService.evictPlayer(discordId);
@@ -294,16 +320,44 @@ public class JdaListener extends ListenerAdapter {
                             """.formatted(energiaGato))
                     .setAuthor(event.getUser().getEffectiveName())
                     .setThumbnail(event.getUser().getEffectiveAvatarUrl())
-                    .setTimestamp(LocalDateTime.now())
+                    .setTimestamp(Instant.now())
                     .setColor(Color.GREEN)
                     .setFooter("HotBctsGames")
                     .build());
             return;
         }
 
-        int toRemove = (int) Math.ceil(asicProducts.size() / 2.0);
+        List<Product> miningDevices = new ArrayList<>();
+        miningDevices.addAll(asicProducts);
+        miningDevices.addAll(gpuProducts);
+
+        int toRemove = (int) Math.ceil(miningDevices.size() * energyService.getGatoLossPercent());
+        int removedAsic = 0;
+        int removedGpu = 0;
         if (toRemove > 0) {
-            productRepository.deleteAll(asicProducts.subList(0, toRemove));
+            Collections.shuffle(miningDevices, random);
+            List<Product> removed = miningDevices.subList(0, toRemove);
+            for (Product product : removed) {
+                Integer storeId = product.getStoreProductId();
+                if (storeId != null) {
+                    StoreProduct storeProduct = StoreProduct.fromId(storeId);
+                    if (storeProduct != null) {
+                        if (storeProduct.isAsic()) {
+                            removedAsic++;
+                        } else if (storeProduct.isGpu()) {
+                            removedGpu++;
+                        }
+                        continue;
+                    }
+                }
+                String name = product.getName();
+                if (name != null && name.toUpperCase().contains("ASIC")) {
+                    removedAsic++;
+                } else if (name != null && name.toUpperCase().contains("GPU")) {
+                    removedGpu++;
+                }
+            }
+            productRepository.deleteAll(removed);
         }
         cacheService.evictPlayer(discordId);
 
@@ -311,11 +365,11 @@ public class JdaListener extends ListenerAdapter {
                 .setTitle("Gato descoberto 🚨")
                 .setDescription("""
                         Status: Companhia descobriu ⚠️
-                        ASICs perdidos: %d
-                        """.formatted(toRemove))
+                        Perdas: %d ASIC(s) e %d GPU(s)
+                        """.formatted(removedAsic, removedGpu))
                 .setAuthor(event.getUser().getEffectiveName())
                 .setThumbnail(event.getUser().getEffectiveAvatarUrl())
-                .setTimestamp(LocalDateTime.now())
+                .setTimestamp(Instant.now())
                 .setColor(Color.RED)
                 .setFooter("HotBctsGames")
                 .build());
@@ -444,7 +498,7 @@ public class JdaListener extends ListenerAdapter {
                         """.formatted(status, amount, price, gross, tax, fine, net))
                 .setAuthor(event.getUser().getEffectiveName())
                 .setThumbnail(event.getUser().getEffectiveAvatarUrl())
-                .setTimestamp(LocalDateTime.now())
+                .setTimestamp(Instant.now())
                 .setColor(Color.GREEN)
                 .setFooter("HotBctsGames")
                 .build());
@@ -462,7 +516,7 @@ public class JdaListener extends ListenerAdapter {
                             """)
                     .setAuthor(event.getUser().getEffectiveName())
                     .setThumbnail(event.getUser().getEffectiveAvatarUrl())
-                    .setTimestamp(LocalDateTime.now())
+                    .setTimestamp(Instant.now())
                     .setColor(Color.ORANGE)
                     .setFooter("HotBctsGames")
                     .build());
@@ -470,7 +524,7 @@ public class JdaListener extends ListenerAdapter {
         }
 
         BigDecimal money = safeMoney(economy.getMoney());
-        BigDecimal fee = money.multiply(new BigDecimal("0.50"));
+        BigDecimal fee = money.multiply(BigDecimal.valueOf(balanceProperties.getPrison().getBailRate()));
         economy.setMoney(money.subtract(fee));
         economyRepository.save(economy);
 
@@ -487,7 +541,7 @@ public class JdaListener extends ListenerAdapter {
                         """.formatted(fee))
                 .setAuthor(event.getUser().getEffectiveName())
                 .setThumbnail(event.getUser().getEffectiveAvatarUrl())
-                .setTimestamp(LocalDateTime.now())
+                .setTimestamp(Instant.now())
                 .setColor(Color.GREEN)
                 .setFooter("HotBctsGames")
                 .build());
@@ -518,7 +572,7 @@ public class JdaListener extends ListenerAdapter {
                         """.formatted(needed))
                 .setAuthor(event.getUser().getEffectiveName())
                 .setThumbnail(event.getUser().getEffectiveAvatarUrl())
-                .setTimestamp(LocalDateTime.now())
+                .setTimestamp(Instant.now())
                 .setColor(Color.RED)
                 .setFooter("HotBctsGames")
                 .build();
@@ -530,7 +584,7 @@ public class JdaListener extends ListenerAdapter {
                 .setDescription(message)
                 .setAuthor(event.getUser().getEffectiveName())
                 .setThumbnail(event.getUser().getEffectiveAvatarUrl())
-                .setTimestamp(LocalDateTime.now())
+                .setTimestamp(Instant.now())
                 .setColor(Color.RED)
                 .setFooter("HotBctsGames")
                 .build();
@@ -557,7 +611,7 @@ public class JdaListener extends ListenerAdapter {
                         """.formatted(status, productName, price, tax, fine, paid))
                 .setAuthor(event.getUser().getEffectiveName())
                 .setThumbnail(event.getUser().getEffectiveAvatarUrl())
-                .setTimestamp(LocalDateTime.now())
+                .setTimestamp(Instant.now())
                 .setColor(Color.GREEN)
                 .setFooter("HotBctsGames")
                 .build();
