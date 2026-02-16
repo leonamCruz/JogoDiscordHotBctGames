@@ -1,0 +1,87 @@
+services:
+  app:
+    image: hotbctgames:latest
+    ports:
+      - "6969:6969"
+      - "7979:7979"
+    env_file:
+      - env.env
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DATABASE_URL: jdbc:mariadb://mariadb:3306/hotbctgames
+      DATABASE_USER: ${DATABASE_USER}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      TOKEN-BOT_DISCORD: ${TOKEN_BOT_DISCORD}
+      MANAGEMENT_SERVER_PORT: 7979
+      MANAGEMENT_SERVER_ADDRESS: 0.0.0.0
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  mariadb:
+    image: mariadb:11.4
+    ports:
+      - "3306:3306"
+    env_file:
+      - env.env
+    environment:
+      MARIADB_DATABASE: hotbctgames
+      MARIADB_USER: ${DATABASE_USER}
+      MARIADB_PASSWORD: ${DATABASE_PASSWORD}
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mariadb-admin", "ping", "-h", "127.0.0.1", "-u", "root", "-p$${MARIADB_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  prometheus:
+    image: prom/prometheus:v2.52.0
+    ports:
+      - "9090:9090"
+    configs:
+      - source: prometheus_config
+        target: /etc/prometheus/prometheus.yml
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  grafana:
+    image: grafana/grafana:11.1.0
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    configs:
+      - source: grafana_datasource
+        target: /etc/grafana/provisioning/datasources/datasource.yml
+      - source: grafana_dashboards
+        target: /etc/grafana/provisioning/dashboards/dashboards.yml
+      - source: grafana_dashboard_hotbct
+        target: /var/lib/grafana/dashboards/hotbctgames.json
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+volumes:
+  mariadb_data:
+
+configs:
+  prometheus_config:
+    file: ./observability/prometheus.yml
+  grafana_datasource:
+    file: ./observability/grafana/provisioning/datasources/datasource.yml
+  grafana_dashboards:
+    file: ./observability/grafana/provisioning/dashboards/dashboards.yml
+  grafana_dashboard_hotbct:
+    file: ./observability/grafana/dashboards/hotbctgames.json
