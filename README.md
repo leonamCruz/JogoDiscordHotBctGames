@@ -1,4 +1,4 @@
-# HotbctGamess 🚀
+# JogoDeRpgDiscord 🚀
 
 Bot de economia e submundo para Discord, com mineração de BTC (de brincadeira), energia, trabalhos, crimes, loja e ranking.  
 
